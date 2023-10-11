@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.pkm.PrototypePKM.BottomBarItem
 import com.pkm.PrototypePKM.ui.screen.beranda.BerandaScreen
-import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackScreen
+import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackScreenNew
 import com.pkm.PrototypePKM.ui.screen.prediksi.PrediksiScreen
 
 @Composable
@@ -23,7 +23,7 @@ fun HomeNavGraph(navController: NavHostController) {
             BerandaScreen()
         }
         composable(route=BottomBarItem.Feedback.route){
-            FeedbackScreen()           
+            FeedbackScreenNew()
         }
     }
 }
