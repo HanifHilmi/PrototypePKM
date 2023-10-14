@@ -62,7 +62,10 @@ fun PrediksiScreen() {
                 )
                 Row {
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(onClick = {},modifier =Modifier.padding(16.dp)) {
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.padding(16.dp)
+                    ) {
                         Text(text = "Proses")
                     }
                 }

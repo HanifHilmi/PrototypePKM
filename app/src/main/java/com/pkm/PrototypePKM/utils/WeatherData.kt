@@ -2,12 +2,29 @@ package com.pkm.PrototypePKM.utils
 
 import com.pkm.PrototypePKM.R
 
+
+
+
+data class WeatherData(
+    val alat1_id: String,
+    val alat1_tanggal: String,
+    val alat1_waktu: String,
+    val alat1_suhu: String,
+    val alat1_kelembaban: String,
+    val alat1_kec_angin: String,
+    val alat1_radiasi: String,
+    val alat2_id: String,
+    val alat2_tanggal: String,
+    val alat2_waktu: String,
+    val alat2_curah_hujan: String
+)
+
 class CurrentWeatherData(
     suhu: Double,
     kelembapan: Int,
     curah_hujan : Float,
     cuaca:String
-):WeatherData(cuaca){
+):BaseWeatherData(cuaca){
     var suhu: Double
     var kelembapan:Int
     var curah_hujan:Float
@@ -20,10 +37,13 @@ class CurrentWeatherData(
 
 }
 
+
+
+
 class ForecastWeatherData(
     tanggal:String,
     cuaca:String
-):WeatherData(cuaca){
+):BaseWeatherData(cuaca){
     var tanggal:String
     init {
         this.tanggal = tanggal
@@ -32,7 +52,7 @@ class ForecastWeatherData(
 }
 
 
-sealed class WeatherData(val cuaca: String) {
+sealed class BaseWeatherData(val cuaca: String) {
     fun getIconId(): Int{
         return when(cuaca){
             "Cerah" -> R.drawable.icon_cuaca_cerah

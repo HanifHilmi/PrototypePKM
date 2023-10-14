@@ -1,12 +1,13 @@
 package com.pkm.PrototypePKM.ui.screen.beranda
 
 
+import android.util.Log
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,18 +27,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pkm.PrototypePKM.R
-import com.pkm.PrototypePKM.utils.CurrentWeatherData
+import com.pkm.PrototypePKM.utils.API_TEST
 import com.pkm.PrototypePKM.utils.ForecastWeatherData
+import com.pkm.PrototypePKM.utils.WeatherData
+import com.pkm.PrototypePKM.viewModels.BerandaViewModel
 
 @Composable
-fun BerandaScreen() {
+fun BerandaScreen(berandaViewModel: BerandaViewModel= viewModel()) {
+
+    val weatherData by berandaViewModel.weatherData.collectAsState()
+
+    LaunchedEffect(key1 = weatherData){
+        Log.d(API_TEST,"getLatestData ${weatherData.toString()}")
+    }
+
+
+    BerandaContent(weatherData = weatherData)
+
+
+}
+
+@Composable
+fun BerandaContent(
+    weatherData:WeatherData?
+) {
+
     Box(modifier = Modifier.fillMaxSize()){
         Column(modifier = Modifier
             .padding(16.dp)
@@ -47,11 +72,9 @@ fun BerandaScreen() {
                 .fillMaxWidth()
                 .padding(top = 16.dp))
             Text(text = "Cuaca saat ini", style = MaterialTheme.typography.labelLarge)
-            WeatherCard(
-                CurrentWeatherData(
-                    25.0,70,5f,"Hujan Ringan"
-                )
-            )
+            if (weatherData != null){
+                WeatherCard(weatherData)
+            }
             Divider(thickness = 2.dp,modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp))
@@ -63,7 +86,7 @@ fun BerandaScreen() {
                     ForecastWeatherData("Sabtu, 7 Oktober 2023","Hujan Ringan"),
                     ForecastWeatherData("Minggu, 8 Oktober 2023","Hujan"),
 
-                )
+                    )
             )
             Divider(thickness = 2.dp,modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +100,7 @@ fun BerandaScreen() {
 
 @Composable
 fun WeatherCard(
-    data:CurrentWeatherData
+    data:WeatherData
 ) {
     Card(modifier = Modifier.padding(bottom = 16.dp, top = 8.dp)) {
 
@@ -89,11 +112,11 @@ fun WeatherCard(
 
                 Text(text = "Rabu, 4 Oktober 2023", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.padding(8.dp))
-                Text(text = "-${data.cuaca}")
+                Text(text = "-Cuaca-")
 
             }
             Icon(
-                painter = painterResource(data.getIconId()),
+                painter = painterResource(R.drawable.icon_cuaca_cerah),
                 contentDescription = "icon cuaca",
                 modifier= Modifier
                     .fillMaxHeight()
@@ -103,18 +126,28 @@ fun WeatherCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Max),
+            .height(IntrinsicSize.Max)
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${data.suhu} \u2103" )
-        WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${data.kelembapan} Rh" )
-        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${data.curah_hujan} mm" )
-
+        WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${data.alat1_suhu} \u2103" )
+        WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${data.alat1_kelembaban} Rh" )
+        WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan angin" , content =  "${data.alat1_kec_angin} " )
+        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${data.alat2_curah_hujan} mm" )
+        WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${data.alat1_radiasi} " )
+    }
+    Row {
+        Spacer(modifier = Modifier.weight(1f))
+        Column {
+            Text(text = "Pembaharuan terakhir: ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${data.alat1_waktu},${data.alat1_tanggal} ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${data.alat2_waktu},${data.alat2_tanggal} ", style = MaterialTheme.typography.labelSmall)
+        }
     }
 }
 
 @Composable
-fun RowScope.WeatherItemCard(
+fun WeatherItemCard(
     iconID: Int,
     title: String, content: String,
     modifier: Modifier = Modifier
@@ -122,7 +155,7 @@ fun RowScope.WeatherItemCard(
         modifier = modifier
             .padding(bottom = 16.dp)
             .padding(horizontal = 4.dp)
-            .weight(1f),
+            .width(100.dp),
     ) {
         Column(
             modifier = Modifier
@@ -131,18 +164,19 @@ fun RowScope.WeatherItemCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Icon(
-                    painterResource(id = iconID),
-                    contentDescription = "icon $title",
-                    modifier = Modifier.width(24.dp)
-                )
-                Text(text = title, color = Color.Black)
-            }
-            Spacer(modifier = Modifier.padding(6.dp))
+//            Row(
+//                modifier = Modifier.padding(4.dp),
+//            ) {
+//            }
+            Text(text = title,style=MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier
+                .padding(2.dp)
+                .weight(1f))
+            Icon(
+                painterResource(id = iconID),
+                contentDescription = "icon $title",
+                modifier = Modifier.width(30.dp).aspectRatio(1f)
+            )
             Text(text = content, color = Color.Gray)
         }
     }
@@ -210,7 +244,21 @@ fun EarlyWarningCard() {
 fun BerandaPrev() {
     MaterialTheme{
         Surface {
-            BerandaScreen()
+            BerandaContent(
+                WeatherData(
+                    alat1_id = "7275",
+                    alat1_tanggal= "13-09-2023",
+                    alat1_waktu= "20:07:31",
+                    alat1_suhu= "30.30",
+                    alat1_kelembaban= "53.20",
+                    alat1_kec_angin= "0.00",
+                    alat1_radiasi= "4.17",
+                    alat2_id= "7275",
+                    alat2_tanggal= "14-10-2023",
+                    alat2_waktu= "21:19:29",
+                    alat2_curah_hujan= "0.00"
+                )
+            )
         }
     }
 }

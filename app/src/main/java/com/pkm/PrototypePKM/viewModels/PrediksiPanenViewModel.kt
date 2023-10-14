@@ -1,4 +1,4 @@
-package com.pkm.PrototypePKM
+package com.pkm.PrototypePKM.viewModels
 
 import androidx.lifecycle.ViewModel
 
