@@ -16,8 +16,11 @@ import retrofit2.http.GET
 
 class BerandaViewModel : ViewModel() {
 
-    private val _weatherData = MutableStateFlow<WeatherData?>(null)
-    val weatherData: StateFlow<WeatherData?> = _weatherData
+    private val _latestWeatherData = MutableStateFlow<WeatherData?>(null)
+    val latestWeatherData: StateFlow<WeatherData?> = _latestWeatherData
+
+    private val _weatherData = MutableStateFlow<List<WeatherData>>(emptyList())
+    val weatherData = _weatherData
 
     private val apiService: ApiService
 
@@ -38,13 +41,26 @@ class BerandaViewModel : ViewModel() {
                 Log.d(API_TEST,"request count ${++count}")
                 try {
                     val response = apiService.getLatestData()
-                    _weatherData.value = response[0]
+                    _latestWeatherData.value = response[0]
                 } catch (e: Exception) {
                     // Handle any errors or retry logic here
                 }
                 delay(DATA_REQUEST_INTERVAL)
             }
         }
+    }
+
+    fun fetchMultiData(){
+        viewModelScope.launch {
+            try {
+                val response = apiService.getData()
+                _weatherData.value = response
+            }catch (e:Exception){
+                // Handle any errors or retry logic here
+            }
+        }
+
+
     }
 
 }
@@ -54,5 +70,8 @@ class BerandaViewModel : ViewModel() {
 interface ApiService {
     @GET("getlatestdata.php")
     suspend fun getLatestData(): List<WeatherData>
+
+    @GET("getdata.php")
+    suspend fun getData():List<WeatherData>
 }
 

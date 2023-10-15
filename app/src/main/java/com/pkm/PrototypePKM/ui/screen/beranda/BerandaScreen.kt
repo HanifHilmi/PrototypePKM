@@ -2,6 +2,7 @@ package com.pkm.PrototypePKM.ui.screen.beranda
 
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,23 +45,27 @@ import com.pkm.PrototypePKM.utils.WeatherData
 import com.pkm.PrototypePKM.viewModels.BerandaViewModel
 
 @Composable
-fun BerandaScreen(berandaViewModel: BerandaViewModel= viewModel()) {
+fun BerandaScreen(
+    onWeatherCardClicked: () -> Unit,
+    berandaViewModel: BerandaViewModel= viewModel()
+) {
 
-    val weatherData by berandaViewModel.weatherData.collectAsState()
+    val weatherData by berandaViewModel.latestWeatherData.collectAsState()
 
     LaunchedEffect(key1 = weatherData){
         Log.d(API_TEST,"getLatestData ${weatherData.toString()}")
     }
 
 
-    BerandaContent(weatherData = weatherData)
+    BerandaContent(weatherData = weatherData, onWeatherCardClicked = onWeatherCardClicked)
 
 
 }
 
 @Composable
 fun BerandaContent(
-    weatherData:WeatherData?
+    weatherData:WeatherData?,
+    onWeatherCardClicked: () -> Unit = {}
 ) {
 
     Box(modifier = Modifier.fillMaxSize()){
@@ -73,7 +78,9 @@ fun BerandaContent(
                 .padding(top = 16.dp))
             Text(text = "Cuaca saat ini", style = MaterialTheme.typography.labelLarge)
             if (weatherData != null){
-                WeatherCard(weatherData)
+                WeatherCard(weatherData){
+                    onWeatherCardClicked()
+                }
             }
             Divider(thickness = 2.dp,modifier = Modifier
                 .fillMaxWidth()
@@ -100,7 +107,8 @@ fun BerandaContent(
 
 @Composable
 fun WeatherCard(
-    data:WeatherData
+    data:WeatherData,
+    onWeatherCardClicked: ()-> Unit = {}
 ) {
     Card(modifier = Modifier.padding(bottom = 16.dp, top = 8.dp)) {
 
@@ -127,7 +135,8 @@ fun WeatherCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
-            .horizontalScroll(rememberScrollState()),
+            .horizontalScroll(rememberScrollState())
+            .clickable { onWeatherCardClicked() },
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${data.alat1_suhu} \u2103" )
@@ -155,7 +164,8 @@ fun WeatherItemCard(
         modifier = modifier
             .padding(bottom = 16.dp)
             .padding(horizontal = 4.dp)
-            .width(100.dp),
+            .width(100.dp)
+
     ) {
         Column(
             modifier = Modifier
