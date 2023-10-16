@@ -3,10 +3,12 @@ package com.pkm.PrototypePKM.ui.screen.feedback
 import android.Manifest
 import android.app.Activity
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
-import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -58,6 +60,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.content.PermissionChecker
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
@@ -67,20 +71,20 @@ import com.maxkeppeler.sheets.calendar.models.CalendarStyle
 import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.ui.theme.PrototypePKMTheme
 import kotlinx.coroutines.delay
+import java.io.File
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.util.Date
 
 @Composable
 fun FeedbackScreenNew() {
 
     val qrKeyList = listOf(
-        "qrkey1","qrkey2","qrkey3"
+        "Miaw","qrkey2","qrkey3"
     )
     var qrResult by remember { mutableStateOf("")}
     var qrState by remember { mutableStateOf("")}
     var showFeedback by remember {mutableStateOf(false)}
-
-
-
 
 
     LaunchedEffect(key1 = qrResult.isNotEmpty()){
@@ -98,8 +102,6 @@ fun FeedbackScreenNew() {
             showFeedback = false
         }
     }
-
-
 
     if (!showFeedback){
         QrCam(
@@ -123,10 +125,12 @@ fun FeedbackContent() {
         //val selectedDateText = remember { mutableStateOf("Pilih tanggal")}
         var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
         val calendarState = rememberUseCaseState()
-
         val selectedFile = remember { mutableStateOf<String?>(null) }
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
+
+        val file = context.createImageFile()
+        val contentUri = FileProvider.getUriForFile(context, "com.pkm.PrototypePKM.provider", file)
 
         val launcher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
@@ -155,6 +159,28 @@ fun FeedbackContent() {
             } else {
                 // Izin ditolak, tangani dengan baik
                 // Anda dapat menampilkan pesan kepada pengguna atau mengambil tindakan yang sesuai
+            }
+        }
+
+        var capturedImageUri by remember {
+            mutableStateOf<Uri>(Uri.EMPTY)
+        }
+
+
+        val cameraLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
+                capturedImageUri = contentUri
+            }
+
+
+        val permissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            if (it) {
+                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+                cameraLauncher.launch(contentUri)
+            } else {
+                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -284,8 +310,8 @@ fun FeedbackContent() {
                             .align(Alignment.CenterVertically)
                     ){
                         Text(
-                            text = selectedFile.value ?: "Foto",
-                            color = if (selectedFile.value.isNullOrEmpty()) {
+                            text = capturedImageUri.path?.substringAfterLast("/") ?: "Foto",
+                            color = if (capturedImageUri.path.isNullOrEmpty()) {
                                 Color.Gray
                             } else {
                                 Color.Black
@@ -354,8 +380,14 @@ fun FeedbackContent() {
                     dismissButton = {
                         Button(
                             onClick = {
-                                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                launcher.launch(cameraIntent)
+                                val permissionCheckResult =
+                                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
+                                    cameraLauncher.launch(contentUri)
+                                } else {
+                                    // Request a permission
+                                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                                }
                                 showOptionsDialog = false
                             }
                         ) {
@@ -382,6 +414,18 @@ private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): Stri
     }
 
     return null
+}
+
+fun Context.createImageFile(): File {
+    // Create an image file name
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+    val imageFileName = "JPEG_" + timeStamp + "_"
+    val image = File.createTempFile(
+        imageFileName, /* prefix */
+        ".jpg", /* suffix */
+        externalCacheDir      /* directory */
+    )
+    return image
 }
 
 @Preview

@@ -64,7 +64,7 @@ dependencies {
     implementation("com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0")
 
     //qr scanner
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.journeyapps:zxing-android-embedded:4.2.0")
     implementation("com.google.zxing:core:3.5.2")
 
     //camera
@@ -79,6 +79,7 @@ dependencies {
 
     //Ycharts lib
     implementation("co.yml:ycharts:2.1.0")
+    implementation("com.google.ar:core:1.40.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
