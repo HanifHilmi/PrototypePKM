@@ -35,13 +35,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.utils.API_TEST
+import com.pkm.PrototypePKM.utils.Alat1
+import com.pkm.PrototypePKM.utils.Alat2
 import com.pkm.PrototypePKM.utils.ForecastWeatherData
-import com.pkm.PrototypePKM.utils.WeatherData
 import com.pkm.PrototypePKM.viewModels.BerandaViewModel
 
 @Composable
@@ -50,21 +52,24 @@ fun BerandaScreen(
     berandaViewModel: BerandaViewModel= viewModel()
 ) {
 
-    val weatherData by berandaViewModel.latestWeatherData.collectAsState()
+    val alat1Data by berandaViewModel.latestAlat1Data.collectAsState()
+    val alat2Data by berandaViewModel.latestAlat2Data.collectAsState()
 
-    LaunchedEffect(key1 = weatherData){
-        Log.d(API_TEST,"getLatestData ${weatherData.toString()}")
+    LaunchedEffect(key1 = alat1Data,key2 = alat2Data){
+        Log.d(API_TEST,"getLatestData Alat1${alat1Data.toString()}")
+        Log.d(API_TEST,"getLatestData Alat2:${alat2Data.toString()}")
     }
 
 
-    BerandaContent(weatherData = weatherData, onWeatherCardClicked = onWeatherCardClicked)
+    BerandaContent(alat1Data,alat2Data, onWeatherCardClicked = onWeatherCardClicked)
 
 
 }
 
 @Composable
 fun BerandaContent(
-    weatherData:WeatherData?,
+    alat1:Alat1?,
+    alat2:Alat2?,
     onWeatherCardClicked: () -> Unit = {}
 ) {
 
@@ -77,8 +82,8 @@ fun BerandaContent(
                 .fillMaxWidth()
                 .padding(top = 16.dp))
             Text(text = "Cuaca saat ini", style = MaterialTheme.typography.labelLarge)
-            if (weatherData != null){
-                WeatherCard(weatherData){
+            if (alat1 != null && alat2 != null){
+                WeatherCard(dataAlat1 = alat1, dataAlat2 = alat2){
                     onWeatherCardClicked()
                 }
             }
@@ -107,7 +112,8 @@ fun BerandaContent(
 
 @Composable
 fun WeatherCard(
-    data:WeatherData,
+    dataAlat1: Alat1,
+    dataAlat2: Alat2,
     onWeatherCardClicked: ()-> Unit = {}
 ) {
     Card(modifier = Modifier.padding(bottom = 16.dp, top = 8.dp)) {
@@ -139,18 +145,18 @@ fun WeatherCard(
             .clickable { onWeatherCardClicked() },
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${data.alat1_suhu} \u2103" )
-        WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${data.alat1_kelembaban} Rh" )
-        WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan angin" , content =  "${data.alat1_kec_angin} " )
-        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${data.alat2_curah_hujan} mm" )
-        WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${data.alat1_radiasi} " )
+        WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${dataAlat1.suhu} \n\u2103" )
+        WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${dataAlat1.kelembaban}\n%" )
+        WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan angin" , content =  "${dataAlat1.kec_angin}\nm/s" )
+        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${dataAlat2.curah_hujan}\nmm" )
+        WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${dataAlat1.radiasi} \nW/m^2 " )
     }
     Row {
         Spacer(modifier = Modifier.weight(1f))
         Column {
             Text(text = "Pembaharuan terakhir: ", style = MaterialTheme.typography.labelSmall)
-            Text(text = "${data.alat1_waktu},${data.alat1_tanggal} ", style = MaterialTheme.typography.labelSmall)
-            Text(text = "${data.alat2_waktu},${data.alat2_tanggal} ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${dataAlat1.waktu},${dataAlat1.tanggal} ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -187,7 +193,7 @@ fun WeatherItemCard(
                 contentDescription = "icon $title",
                 modifier = Modifier.width(30.dp).aspectRatio(1f)
             )
-            Text(text = content, color = Color.Gray)
+            Text(text = content, color = Color.Gray, textAlign = TextAlign.Center)
         }
     }
 
@@ -255,18 +261,20 @@ fun BerandaPrev() {
     MaterialTheme{
         Surface {
             BerandaContent(
-                WeatherData(
-                    alat1_id = "7275",
-                    alat1_tanggal= "13-09-2023",
-                    alat1_waktu= "20:07:31",
-                    alat1_suhu= "30.30",
-                    alat1_kelembaban= "53.20",
-                    alat1_kec_angin= "0.00",
-                    alat1_radiasi= "4.17",
-                    alat2_id= "7275",
-                    alat2_tanggal= "14-10-2023",
-                    alat2_waktu= "21:19:29",
-                    alat2_curah_hujan= "0.00"
+                Alat1(
+                    id = "19567",
+                    tanggal = "16-10-2023",
+                    waktu= "12:07:11",
+                    suhu= "29.25",
+                    kelembaban="59.95",
+                    kec_angin= "0.00",
+                    radiasi = "868.05"
+                ),
+                alat2 = Alat2(
+                    id = "19567",
+                    tanggal = "16-10-2023",
+                    waktu= "12:07:11",
+                    curah_hujan =  "0.00",
                 )
             )
         }

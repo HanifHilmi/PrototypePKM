@@ -5,19 +5,30 @@ import com.pkm.PrototypePKM.R
 
 
 
-data class WeatherData(
-    val alat1_id: String,
-    val alat1_tanggal: String,
-    val alat1_waktu: String,
-    val alat1_suhu: String,
-    val alat1_kelembaban: String,
-    val alat1_kec_angin: String,
-    val alat1_radiasi: String,
-    val alat2_id: String,
-    val alat2_tanggal: String,
-    val alat2_waktu: String,
-    val alat2_curah_hujan: String
+data class Alat1(
+    val id: String,
+    val tanggal: String,
+    val waktu: String,
+    val suhu: String,
+    val kelembaban: String,
+    val kec_angin: String,
+    val radiasi: String,
+
 )
+
+data class Alat2(
+    val id: String,
+    val tanggal: String,
+    val waktu: String,
+    val curah_hujan: String
+
+)
+
+data class ResponseData(
+    val alat1:List<Alat1>,
+    val alat2:List<Alat2>
+)
+
 
 class CurrentWeatherData(
     suhu: Double,

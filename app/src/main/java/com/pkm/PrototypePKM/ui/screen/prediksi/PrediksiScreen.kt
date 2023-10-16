@@ -84,8 +84,6 @@ fun PilihJenisTanaman(
     changeTanaman:(String)-> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-//    val listTanaman = listOf("Buncis", "Tomat", "Cabe","Sawi Putih")
-//    var tanamanSelected by remember { mutableStateOf("") }
 
     ExposedDropdownMenuBox(
         modifier = Modifier
