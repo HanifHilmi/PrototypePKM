@@ -231,6 +231,7 @@ fun TransparentClipLayout(
                 else -> ""
             }
 
+
             Text(
                 text = pesanScan,
                 style = MaterialTheme.typography.displaySmall,

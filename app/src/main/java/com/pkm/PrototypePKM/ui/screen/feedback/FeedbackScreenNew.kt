@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.PermissionChecker
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
@@ -71,6 +73,7 @@ import com.maxkeppeler.sheets.calendar.models.CalendarStyle
 import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.ui.theme.PrototypePKMTheme
 import kotlinx.coroutines.delay
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -78,23 +81,19 @@ import java.util.Date
 
 @Composable
 fun FeedbackScreenNew() {
-
     val qrKeyList = listOf(
-        "Miaw","qrkey2","qrkey3"
+        "Miaw", "qrkey2", "qrkey3"
     )
-    var qrResult by remember { mutableStateOf("")}
-    var qrState by remember { mutableStateOf("")}
-    var showFeedback by remember {mutableStateOf(false)}
+    var qrResult by remember { mutableStateOf("") }
+    var qrState by remember { mutableStateOf("") }
+    var showFeedback by remember { mutableStateOf(false) }
 
-
-    LaunchedEffect(key1 = qrResult.isNotEmpty()){
-
-        if (qrKeyList.contains(qrResult)){       // QR key valid
+    LaunchedEffect(key1 = qrResult.isNotEmpty()) {
+        if (qrKeyList.contains(qrResult)) {
             qrState = "SUCCESS"
             delay(500)
             showFeedback = true
-
-        }else if(!qrKeyList.contains(qrResult) && qrResult.isNotEmpty()){//QR key invalid
+        } else if (!qrKeyList.contains(qrResult) && qrResult.isNotEmpty()) {
             qrState = "FAILED"
             delay(3000)
             qrState = ""
@@ -102,33 +101,24 @@ fun FeedbackScreenNew() {
             showFeedback = false
         }
     }
-
-    if (!showFeedback){
-        QrCam(
-            getQrResult = {
-                qrResult = it
-            },
-            qrState = qrState
-        )
-    }else {
-        FeedbackContent()
+    if (!showFeedback) {
+        FeedbackContent(qrResult = qrResult)
+    } else {
+        FeedbackContent(qrResult = qrResult)
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent() {
+fun FeedbackContent(qrResult: String) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
-        //val selectedDateText = remember { mutableStateOf("Pilih tanggal")}
-        var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
+        var selectedDate by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
         val calendarState = rememberUseCaseState()
         val selectedFile = remember { mutableStateOf<String?>(null) }
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
-
         val file = context.createImageFile()
         val contentUri = FileProvider.getUriForFile(context, "com.pkm.PrototypePKM.provider", file)
 
@@ -141,7 +131,6 @@ fun FeedbackContent() {
                 selectedFile.value = selectedImageUri?.toString()
 
                 if (selectedImageUri != null) {
-                    // Jika gambar dipilih dari galeri, dapatkan nama file dari URI
                     val fileName = getFileNameFromUri(contentResolver, selectedImageUri)
                     selectedFile.value = fileName
                 }
@@ -152,13 +141,11 @@ fun FeedbackContent() {
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                // Izin diberikan, Anda sekarang dapat mengakses gambar
                 val galleryIntent = Intent(Intent.ACTION_PICK)
                 galleryIntent.type = "image/*"
                 launcher.launch(galleryIntent)
             } else {
-                // Izin ditolak, tangani dengan baik
-                // Anda dapat menampilkan pesan kepada pengguna atau mengambil tindakan yang sesuai
+                // Handle permission denied
             }
         }
 
@@ -166,21 +153,57 @@ fun FeedbackContent() {
             mutableStateOf<Uri>(Uri.EMPTY)
         }
 
-
         val cameraLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
                 capturedImageUri = contentUri
             }
 
+        val permissionLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+                if (it) {
+                    Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+                    cameraLauncher.launch(contentUri)
+                } else {
+                    Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
 
-        val permissionLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) {
-            if (it) {
-                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-                cameraLauncher.launch(contentUri)
-            } else {
-                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+        var selectedImageUri = when {
+            !capturedImageUri.path.isNullOrEmpty() -> capturedImageUri
+            !selectedFile.value.isNullOrEmpty() -> Uri.parse(selectedFile.value)
+            else -> Uri.EMPTY
+        }
+
+        val storageRef = Firebase.storage.reference
+
+        fun uploadImageToFirebase() {
+            if (selectedImageUri != Uri.EMPTY) {
+                val imageRef = storageRef.child("images/${System.currentTimeMillis()}.jpg")
+                val contentResolver = context.contentResolver
+
+                // Read the image data from the selected URI
+                val inputStream = contentResolver.openInputStream(selectedImageUri)
+                val buffer = ByteArrayOutputStream()
+                val bufferData = ByteArray(1024)
+                var bytesRead: Int
+                while (inputStream?.read(bufferData, 0, bufferData.size).also { bytesRead = it!! } != -1) {
+                    buffer.write(bufferData, 0, bytesRead)
+                }
+                val data = buffer.toByteArray()
+
+                // Upload the image to Firebase Storage
+                val uploadTask = imageRef.putBytes(data)
+
+                uploadTask.addOnSuccessListener { taskSnapshot ->
+                    // Upload completed successfully
+                    val downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl
+                    if (downloadUrl != null) {
+                        val imageUrl = downloadUrl.result.toString()
+                        // Do something with the imageURL (e.g., store it in a database)
+                    }
+                }.addOnFailureListener { exception ->
+                    // Handle the upload failure
+                }
             }
         }
 
@@ -190,7 +213,6 @@ fun FeedbackContent() {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(1.dp)
@@ -198,11 +220,11 @@ fun FeedbackContent() {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp) // Sesuaikan ukuran ikon
+                    modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Anon", // Teks yang ingin Anda tambahkan
-                    modifier = Modifier.padding(start = 8.dp), // Sesuaikan jarak antara ikon dan teks
+                    text = "Anon",
+                    modifier = Modifier.padding(start = 8.dp),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -242,11 +264,11 @@ fun FeedbackContent() {
                 )
             )
 
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            Card(modifier = Modifier.fillMaxSize()){
-                Row(modifier = Modifier.padding(8.dp)){
-
+            Card(modifier = Modifier.fillMaxSize()) {
+                Row(modifier = Modifier.padding(8.dp)) {
                     Icon(
                         imageVector = Icons.Filled.DateRange,
                         contentDescription = null,
@@ -263,7 +285,7 @@ fun FeedbackContent() {
                     Spacer(modifier = Modifier.weight(1f))
 
                     Button(
-                        onClick = { calendarState.show() } // Update the value of showDialog
+                        onClick = { calendarState.show() }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.DateRange,
@@ -273,28 +295,24 @@ fun FeedbackContent() {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-
                     CalendarDialog(
                         state = calendarState,
                         config = CalendarConfig(
-                            yearSelection =true,
-                            monthSelection =true,
+                            yearSelection = true,
+                            monthSelection = true,
                             style = CalendarStyle.MONTH,
                         ),
                         selection = CalendarSelection.Date(
-                            selectedDate= selectedDate
-                        ){newDate ->
+                            selectedDate = selectedDate
+                        ) { newDate ->
                             selectedDate = newDate
                         }
                     )
-
-
                 }
-
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxSize()){
+            Card(modifier = Modifier.fillMaxSize()) {
                 Row(modifier = Modifier.padding(8.dp)) {
                     Icon(
                         contentDescription = null,
@@ -308,13 +326,17 @@ fun FeedbackContent() {
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically)
-                    ){
+                    ) {
                         Text(
-                            text = capturedImageUri.path?.substringAfterLast("/") ?: "Foto",
-                            color = if (capturedImageUri.path.isNullOrEmpty()) {
-                                Color.Gray
+                            text = if (selectedImageUri != Uri.EMPTY) {
+                                selectedImageUri.toString().substringAfterLast("/")
                             } else {
+                                "Foto"
+                            },
+                            color = if (selectedImageUri != Uri.EMPTY) {
                                 Color.Black
+                            } else {
+                                Color.Gray
                             },
                             modifier = Modifier
                                 .horizontalScroll(rememberScrollState())
@@ -340,6 +362,7 @@ fun FeedbackContent() {
             Button(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
+                    uploadImageToFirebase()
                 }
             ) {
                 Text("Kirim")
@@ -353,12 +376,13 @@ fun FeedbackContent() {
                         Text(text = "Pilih Sumber Gambar")
                     },
                     text = {
-                        val fileName = selectedFile.value?.substringAfterLast('%')
-                        Text(text = fileName ?: "Pilih sumber gambar untuk mengunggah")
+                        Text(text = "Pilih sumber gambar untuk mengunggah")
                     },
                     confirmButton = {
                         Button(
                             onClick = {
+                                selectedImageUri = Uri.EMPTY
+                                capturedImageUri = Uri.EMPTY
                                 if (PermissionChecker.checkSelfPermission(
                                         context,
                                         Manifest.permission.CAMERA
@@ -380,12 +404,16 @@ fun FeedbackContent() {
                     dismissButton = {
                         Button(
                             onClick = {
+                                selectedImageUri = Uri.EMPTY
+                                capturedImageUri = Uri.EMPTY
                                 val permissionCheckResult =
-                                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.CAMERA
+                                    )
                                 if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
                                     cameraLauncher.launch(contentUri)
                                 } else {
-                                    // Request a permission
                                     permissionLauncher.launch(Manifest.permission.CAMERA)
                                 }
                                 showOptionsDialog = false
@@ -399,6 +427,7 @@ fun FeedbackContent() {
         }
     }
 }
+
 
 private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): String? {
     val cursor = contentResolver.query(uri, null, null, null, null)
@@ -417,25 +446,22 @@ private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): Stri
 }
 
 fun Context.createImageFile(): File {
-    // Create an image file name
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
     val imageFileName = "JPEG_" + timeStamp + "_"
     val image = File.createTempFile(
-        imageFileName, /* prefix */
-        ".jpg", /* suffix */
-        externalCacheDir      /* directory */
+        imageFileName,
+        ".jpg",
+        externalCacheDir
     )
     return image
 }
 
+
+
 @Preview
 @Composable
 fun FeedbackPrev() {
-
     Surface {
-        FeedbackContent()
+        FeedbackContent(qrResult = "")
     }
-
 }
-
-

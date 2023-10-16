@@ -17,7 +17,8 @@ class QrCodeAnalyzer(
 
     private val supportedImageFormats = listOf(
         ImageFormat.YUV_420_888,
-        ImageFormat.YUV_422_888
+        ImageFormat.YUV_422_888,
+        ImageFormat.YUV_444_888,
     )
     override fun analyze(image: ImageProxy) {
         if(image.format in supportedImageFormats) {
@@ -37,8 +38,9 @@ class QrCodeAnalyzer(
                 val result = MultiFormatReader().apply {
                     setHints(
                         mapOf(
-                            DecodeHintType.PURE_BARCODE to arrayListOf(
-                                BarcodeFormat.QR_CODE
+                            DecodeHintType.POSSIBLE_FORMATS to arrayListOf(
+                                BarcodeFormat.QR_CODE,
+                                BarcodeFormat.CODABAR
                             )
                         )
                     )
