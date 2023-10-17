@@ -4,8 +4,11 @@ import android.Manifest
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.net.Uri
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
@@ -61,6 +64,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.core.content.PermissionChecker
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
@@ -73,7 +77,11 @@ import com.maxkeppeler.sheets.calendar.models.CalendarStyle
 import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.ui.theme.PrototypePKMTheme
 import kotlinx.coroutines.delay
+import java.io.File
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun FeedbackScreenNew() {
@@ -130,7 +138,7 @@ fun FeedbackContent() {
         //val selectedDateText = remember { mutableStateOf("Pilih tanggal")}
         var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
         val calendarState = rememberUseCaseState()
-        var selectedImageUri: Uri? = null
+        var selectedImageUri: Uri? by remember { mutableStateOf(null) }
         val selectedFile = remember { mutableStateOf<String?>(null) }
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
@@ -362,6 +370,38 @@ fun FeedbackContent() {
             }
 
 
+            fun takePicture(context: Context, onPictureTaken: (Uri) -> Unit) {
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val imageFileName = "JPEG_$timeStamp.jpg"
+                val storageDir: File? = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+                if (storageDir != null) {
+                    val image = File(storageDir, imageFileName)
+
+                    val imageUri = FileProvider.getUriForFile(
+                        context,
+                        "com.pkm.PrototypePKM.fileprovider",
+                        image
+                    )
+
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+                    cameraIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                    cameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                    // Mulai kamera intent
+                    val activity = context as Activity
+                    activity.startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE)
+
+                    // Panggil callback dengan URI gambar
+                    onPictureTaken(imageUri)
+                } else {
+                    // Handle case where external storage directory is null
+                    // Anda dapat menampilkan pesan kesalahan atau mengambil tindakan yang sesuai
+                }
+            }
+
             if (showOptionsDialog) {
                 AlertDialog(
                     onDismissRequest = { showOptionsDialog = false },
@@ -369,8 +409,7 @@ fun FeedbackContent() {
                         Text(text = "Pilih Sumber Gambar")
                     },
                     text = {
-                        val fileName = selectedFile.value?.substringAfterLast('%')
-                        Text(text = fileName ?: "Pilih sumber gambar untuk mengunggah")
+                        Text(text =  "Pilih sumber gambar untuk mengunggah")
                     },
                     confirmButton = {
                         Button(
@@ -396,7 +435,10 @@ fun FeedbackContent() {
                     dismissButton = {
                         Button(
                             onClick = {
-
+                                takePicture(context) { imageUri ->
+                                    selectedImageUri = imageUri
+                                }
+                                showOptionsDialog = false
                             }
                         ) {
                             Text(text = "Ambil Foto")
@@ -408,6 +450,7 @@ fun FeedbackContent() {
     }
 }
 
+private const val CAMERA_REQUEST_CODE = 123
 private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): String? {
     val cursor = contentResolver.query(uri, null, null, null, null)
 
@@ -423,6 +466,7 @@ private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): Stri
 
     return null
 }
+
 @Preview
 @Composable
 fun FeedbackPrev() {

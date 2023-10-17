@@ -33,7 +33,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.pkm.PrototypePKM.provider"
+            android:authorities="com.pkm.PrototypePKM.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
