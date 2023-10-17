@@ -2,11 +2,14 @@ package com.pkm.PrototypePKM.ui.screen.feedback
 
 import android.Manifest
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -59,6 +62,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.PermissionChecker
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
@@ -124,7 +130,7 @@ fun FeedbackContent() {
         //val selectedDateText = remember { mutableStateOf("Pilih tanggal")}
         var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
         val calendarState = rememberUseCaseState()
-
+        var selectedImageUri: Uri? = null
         val selectedFile = remember { mutableStateOf<String?>(null) }
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
@@ -134,12 +140,12 @@ fun FeedbackContent() {
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data = result.data
-                val selectedImageUri = data?.data
+                selectedImageUri = data?.data
                 selectedFile.value = selectedImageUri?.toString()
 
                 if (selectedImageUri != null) {
                     // Jika gambar dipilih dari galeri, dapatkan nama file dari URI
-                    val fileName = getFileNameFromUri(contentResolver, selectedImageUri)
+                    val fileName = getFileNameFromUri(contentResolver, selectedImageUri!!)
                     selectedFile.value = fileName
                 }
             }
@@ -311,15 +317,50 @@ fun FeedbackContent() {
                 }
             }
 
+
+            fun uploadImageToFirebaseStorage(selectedImageUri: Uri) {
+                val storageRef: StorageReference = Firebase.storage.reference
+                val fileName = getFileNameFromUri(contentResolver, selectedImageUri)
+
+                if (fileName != null) {
+                    // Tentukan path ke mana Anda ingin mengunggah gambar di Firebase Storage
+                    val imageRef = storageRef.child("PKM/$fileName")
+
+                    // Menampilkan dialog loading
+                    val progressDialog = ProgressDialog(context)
+                    progressDialog.setTitle("Uploading")
+                    progressDialog.setMessage("Please wait...")
+                    progressDialog.show()
+
+                    // Mulai proses pengunggahan
+                    val uploadTask = imageRef.putFile(selectedImageUri)
+
+                    uploadTask.addOnSuccessListener { taskSnapshot ->
+                        progressDialog.dismiss() // Menutup dialog loading
+                        Toast.makeText(context, "Succed", Toast.LENGTH_SHORT).show()
+                    }.addOnFailureListener { exception ->
+                        progressDialog.dismiss() // Menutup dialog loading
+                        Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(56.dp))
             Button(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
+                    if (selectedImageUri != null) {
+                        uploadImageToFirebaseStorage(selectedImageUri!!)
+                    } else {
+                        Toast.makeText(context, "Pilih Foto Dahulu", Toast.LENGTH_SHORT).show()
+                    }
+
                 }
             ) {
                 Text("Kirim")
                 Icon(Icons.Filled.ArrowForward, contentDescription = null)
             }
+
 
             if (showOptionsDialog) {
                 AlertDialog(
@@ -355,9 +396,7 @@ fun FeedbackContent() {
                     dismissButton = {
                         Button(
                             onClick = {
-                                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                launcher.launch(cameraIntent)
-                                showOptionsDialog = false
+
                             }
                         ) {
                             Text(text = "Ambil Foto")
@@ -384,7 +423,6 @@ private fun getFileNameFromUri(contentResolver: ContentResolver, uri: Uri): Stri
 
     return null
 }
-
 @Preview
 @Composable
 fun FeedbackPrev() {
