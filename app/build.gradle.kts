@@ -84,6 +84,7 @@ dependencies {
     implementation("com.google.ar:core:1.40.0")
     implementation("com.google.firebase:firebase-storage-ktx:20.2.1")
     implementation("com.google.android.gms:play-services-fido:20.1.0")
+    implementation("com.google.firebase:firebase-common-ktx:20.4.2")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
