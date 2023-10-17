@@ -15,10 +15,12 @@ interface ApiService {
     @GET("getdata.php")
     suspend fun getData():ResponseData
 
+    @GET("model.php")
+    suspend fun getHasilPrediksiPanen():JsonObject
+
     @POST("inagro.php")
-//    suspend fun postInAgro(@Body requestBody: RequestBody): Call<Unit>
     suspend fun postInAgro(@Body requestBody: RequestBody): Response<Unit>
-//    suspend fun postInAgro(@Body requestBody:InAgro): Call<Unit>
+
 }
 
 

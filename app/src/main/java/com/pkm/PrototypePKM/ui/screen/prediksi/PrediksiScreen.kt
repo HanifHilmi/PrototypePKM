@@ -49,17 +49,17 @@ import java.util.UUID
 @Composable
 fun PrediksiScreen(prediksiPanenViewModel: PrediksiPanenViewModel = viewModel()) {
 
-    val postInAgro by prediksiPanenViewModel.postInAgro.collectAsState()
+    val hasilPrediksi by prediksiPanenViewModel.hasilPrediksi.collectAsState()
     val context = LocalContext.current
 
-    val listTanaman = listOf("Buncis", "Tomat", "Cabe","Sawi Putih")
+    val listTanaman = listOf("Buncis", "Tomat", "Cabai")
 
     var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
     var selectedTanaman by remember { mutableStateOf("") }
     var uuid = SharedPreferencesManager(context).getString("uuid_key", "")
 
     if (uuid.isEmpty()){
-        uuid = generateUniqueString(context).toString()
+        uuid = generateUniqueString(context)
     }
 
     Box(modifier = Modifier.fillMaxSize()){
@@ -69,32 +69,42 @@ fun PrediksiScreen(prediksiPanenViewModel: PrediksiPanenViewModel = viewModel())
                     Text(text = "Prediksi Panen Tanaman", style = MaterialTheme.typography.headlineSmall,modifier = Modifier.fillMaxWidth())
                 }
             }
-            Card{
-                PilihJenisTanaman(
-                    listTanaman = listTanaman,
-                    tanamanSelected = selectedTanaman,
-                    changeTanaman = { selectedTanaman = it }
-                )
-                PickTanggalTanam(
-                    selectedDate = selectedDate,
-                    changeDate = { selectedDate = it }
-                )
-                Row {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            if (selectedTanaman.isNotEmpty() ){
-                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                                val inAgroData = InAgro(user= uuid, awal_tanam = selectedDate?.format(formatter).toString() ?: "", jenis_tanaman = selectedTanaman)
-                                prediksiPanenViewModel.postData(inAgroData)
-                            }else{
-                                Toast.makeText(context, "Masukkan jenis Tanaman Terlebih dahulu", Toast.LENGTH_SHORT).show()
-                            }
 
-                        },
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(text = "Proses")
+
+            if (hasilPrediksi != null){
+                ShowHasilPrediksi(hasilPrediksi = hasilPrediksi!!, retryInput = {
+                    selectedTanaman = ""
+                    prediksiPanenViewModel.clearHasil()
+
+                })
+            }else{
+                Card{
+                    PilihJenisTanaman(
+                        listTanaman = listTanaman,
+                        tanamanSelected = selectedTanaman,
+                        changeTanaman = { selectedTanaman = it }
+                    )
+                    PickTanggalTanam(
+                        selectedDate = selectedDate,
+                        changeDate = { selectedDate = it }
+                    )
+                    Row {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            onClick = {
+                                if (selectedTanaman.isNotEmpty() ){
+                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                    val inAgroData = InAgro(user= uuid, awal_tanam = selectedDate?.format(formatter).toString(), jenis_tanaman = selectedTanaman)
+                                    prediksiPanenViewModel.postData(inAgroData,uuid)
+                                }else{
+                                    Toast.makeText(context, "Masukkan jenis Tanaman Terlebih dahulu", Toast.LENGTH_SHORT).show()
+                                }
+
+                            },
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(text = "Proses")
+                        }
                     }
                 }
             }
@@ -103,7 +113,6 @@ fun PrediksiScreen(prediksiPanenViewModel: PrediksiPanenViewModel = viewModel())
         }
     }
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -208,6 +217,8 @@ fun generateUniqueString(context: Context): String {
     sharedPreferencesManager.saveString("uuid_key",uuid.toString())
     return uuid.toString()
 }
+
+
 
 @Preview
 @Composable

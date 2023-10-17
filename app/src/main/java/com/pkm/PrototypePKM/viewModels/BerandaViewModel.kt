@@ -44,7 +44,7 @@ class BerandaViewModel : ViewModel() {
 
 
         val retrofitForcast = Retrofit.Builder()
-            .baseUrl("https://cuaca-gempa-rest-api.vercel.app")
+            .baseUrl("https://cuaca-gempa-rest-api.vercel.app/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
