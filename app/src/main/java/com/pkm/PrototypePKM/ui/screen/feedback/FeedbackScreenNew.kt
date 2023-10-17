@@ -118,13 +118,22 @@ fun FeedbackScreenNew() {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(70.dp))
+            Spacer(modifier = Modifier.height(50.dp))
             Text(
                 text = "Terimakasih",
                 fontSize = 32.sp, // Menggunakan 'sp' untuk ukuran huruf
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
+                    .wrapContentSize(align = Alignment.Center)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Feedback Terkirim",
+                fontSize = 18.sp, // Menggunakan 'sp' untuk ukuran huruf
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(1.dp)
                     .wrapContentSize(align = Alignment.Center)
             )
 
@@ -168,8 +177,8 @@ fun FeedbackScreenNew() {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
-                    text =  "Terimakasih atas laporan yang anda berikan \n" +
-                            "Laporan anda akan digunakan untuk membuat pemrosesan data yang lebih baik lagi",
+                    text =  "Terimakasih atas feedback yang anda berikan \n" +
+                            "Feedback anda akan digunakan untuk membuat pemrosesan data yang lebih baik lagi",
                     textAlign = TextAlign.Justify
                 )
             }

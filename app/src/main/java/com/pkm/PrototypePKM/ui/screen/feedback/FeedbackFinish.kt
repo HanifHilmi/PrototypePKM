@@ -131,7 +131,6 @@ fun FeedbackContent() {
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
 
-
         val launcher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -353,7 +352,7 @@ fun FeedbackContent() {
 
                     uploadTask.addOnSuccessListener { taskSnapshot ->
                         progressDialog.dismiss() // Menutup dialog loading
-                        Toast.makeText(context, "Succed", Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(context, "Succed", Toast.LENGTH_SHORT).show()
                         sharedFlag = true
                         showFeedbackFinish = false
                     }.addOnFailureListener { exception ->
@@ -367,8 +366,8 @@ fun FeedbackContent() {
             Button(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    if (selectedImageUri != null) {
-                        uploadImageToFirebaseStorage(selectedImageUri!!)
+                    if (selectedImageUri != null && text != null && selectedDate != null) {
+                        uploadImageToFirebaseStorage(selectedImageUri!!) //FUNGSI KIRIM DATABASE
                     } else {
                         Toast.makeText(context, "Pilih Foto Dahulu", Toast.LENGTH_SHORT).show()
                     }
