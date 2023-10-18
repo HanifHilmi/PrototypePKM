@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PrototypePKM</string>
+    <string name="app_name">CIPTA: Cuaca dan Iklim Pertanian</string>
 
     <string name="tutup_aplikasi">Tutup Aplikasi?</string>
     <string name="tutup_aplikasi_desc">Tekan Konfirmasi untuk menutup aplikasi.\nTekan Batalkan untuk membatalkan.</string>
