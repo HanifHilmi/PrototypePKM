@@ -65,8 +65,8 @@ dependencies {
     implementation("com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0")
 
     //qr scanner
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    implementation("com.google.zxing:core:3.5.2")
+    implementation("com.journeyapps:zxing-android-embedded:4.2.0")
+    implementation("com.google.zxing:core:3.3.0")
 
     //camera
     implementation("androidx.camera:camera-camera2:1.2.3")

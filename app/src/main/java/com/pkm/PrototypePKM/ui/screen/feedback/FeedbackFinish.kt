@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -130,6 +131,7 @@ fun FeedbackContent() {
         val selectedFile = remember { mutableStateOf<String?>(null) }
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
+        var imgURL = remember { mutableStateOf<String?>(null) }
 
         val launcher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
@@ -353,6 +355,15 @@ fun FeedbackContent() {
                     uploadTask.addOnSuccessListener { taskSnapshot ->
                         progressDialog.dismiss() // Menutup dialog loading
                         //Toast.makeText(context, "Succed", Toast.LENGTH_SHORT).show()
+                        imageRef.downloadUrl
+                            .addOnSuccessListener { uri ->
+                                val imageUrl = uri.toString()
+                                imgURL.value = imageUrl
+
+                            }
+                            .addOnFailureListener { exception ->
+                                // Handle kesalahan jika ada
+                            }
                         sharedFlag = true
                         showFeedbackFinish = false
                     }.addOnFailureListener { exception ->
