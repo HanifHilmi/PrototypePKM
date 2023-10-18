@@ -1,20 +1,23 @@
 package com.pkm.PrototypePKM.ui.navGraph
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.pkm.PrototypePKM.BottomBarItem
+import com.pkm.PrototypePKM.ui.screen.BackHandlerConfirmationDialog
 import com.pkm.PrototypePKM.ui.screen.beranda.BerandaScreen
 import com.pkm.PrototypePKM.ui.screen.beranda.DetailCuacaScreen
-import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackFinish
 import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackScreenNew
 import com.pkm.PrototypePKM.ui.screen.prediksi.PrediksiScreen
 
 @Composable
 fun HomeNavGraph(navController: NavHostController) {
+    BackHandlerConfirmationDialog(activity = LocalContext.current as Activity)
     NavHost(
         navController = navController,
         route = "graph_home",
