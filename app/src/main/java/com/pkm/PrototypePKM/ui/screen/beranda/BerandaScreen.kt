@@ -21,7 +21,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,8 +49,13 @@ import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.utils.API_TEST
 import com.pkm.PrototypePKM.utils.Alat1
 import com.pkm.PrototypePKM.utils.Alat2
-import com.pkm.PrototypePKM.utils.ForecastWeatherData
+import com.pkm.PrototypePKM.utils.currentDateTime
+import com.pkm.PrototypePKM.utils.formatDateAndTime
 import com.pkm.PrototypePKM.viewModels.BerandaViewModel
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun BerandaScreen(
@@ -54,25 +65,43 @@ fun BerandaScreen(
 
     val alat1Data by berandaViewModel.latestAlat1Data.collectAsState()
     val alat2Data by berandaViewModel.latestAlat2Data.collectAsState()
+    val dataForecast by berandaViewModel.dataCuacaList.collectAsState()
+
+
+    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    var currentTime by remember {mutableStateOf(timeFormat.format(Date()))}
+
 
     LaunchedEffect(key1 = alat1Data,key2 = alat2Data){
         Log.d(API_TEST,"getLatestData Alat1${alat1Data.toString()}")
         Log.d(API_TEST,"getLatestData Alat2:${alat2Data.toString()}")
     }
 
+    LaunchedEffect(key1 = Unit){
+        while (true) {
+            currentTime = timeFormat.format(Date())
+            delay(1000) // Delay selama 1 detik
+        }
+    }
 
-    BerandaContent(alat1Data,alat2Data, onWeatherCardClicked = onWeatherCardClicked)
-
+    BerandaContent(
+        alat1Data,
+        alat2Data,
+        currentTime,
+        onWeatherCardClicked = onWeatherCardClicked,
+        dataForecast,
+    )
 
 }
 
 @Composable
 fun BerandaContent(
-    alat1:Alat1?,
-    alat2:Alat2?,
-    onWeatherCardClicked: () -> Unit = {}
+    alat1: Alat1?,
+    alat2: Alat2?,
+    currentTime:String,
+    onWeatherCardClicked: () -> Unit = {},
+    dataForecast: List<Triple<String, String, String>>
 ) {
-
     Box(modifier = Modifier.fillMaxSize()){
         Column(modifier = Modifier
             .padding(16.dp)
@@ -83,28 +112,31 @@ fun BerandaContent(
                 .padding(top = 16.dp))
             Text(text = "Cuaca saat ini", style = MaterialTheme.typography.labelLarge)
             if (alat1 != null && alat2 != null){
-                WeatherCard(dataAlat1 = alat1, dataAlat2 = alat2){
+                WeatherCard(
+                    dataAlat1 = alat1,
+                    dataAlat2 = alat2,
+                    currentTime = currentTime
+                ){
                     onWeatherCardClicked()
+                }
+            }else{
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Text(text = "Loading..")
                 }
             }
             Divider(thickness = 2.dp,modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp))
             Text(text = "Prediksi Cuaca", style = MaterialTheme.typography.labelLarge)
-            ForecastCard(
-                listOf(
-                    ForecastWeatherData("Kamis, 5 Oktober 2023","Cerah"),
-                    ForecastWeatherData("Jumat, 6 Oktober 2023","Cerah Berawan"),
-                    ForecastWeatherData("Sabtu, 7 Oktober 2023","Hujan Ringan"),
-                    ForecastWeatherData("Minggu, 8 Oktober 2023","Hujan"),
+            ForecastCard(dataForecast)
 
-                    )
-            )
-            Divider(thickness = 2.dp,modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp))
-            Text(text = "Early Warning", style = MaterialTheme.typography.labelLarge)
-            EarlyWarningCard()
+            if (alat1 != null && alat2 != null) {
+                EarlyWarningCard(
+                    alat1.kec_angin.toFloat(),
+                    alat2.curah_hujan.toFloat(),
+                )
+            }
         }
     }
 }
@@ -114,6 +146,7 @@ fun BerandaContent(
 fun WeatherCard(
     dataAlat1: Alat1,
     dataAlat2: Alat2,
+    currentTime:String,
     onWeatherCardClicked: ()-> Unit = {}
 ) {
     Card(modifier = Modifier.padding(bottom = 16.dp, top = 8.dp)) {
@@ -124,9 +157,10 @@ fun WeatherCard(
             .height(IntrinsicSize.Max), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f)) {
 
-                Text(text = "Rabu, 4 Oktober 2023", style = MaterialTheme.typography.labelLarge)
+                Text(text = currentDateTime().first, style = MaterialTheme.typography.labelLarge)
+                Text(text = currentTime, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.padding(8.dp))
-                Text(text = "-Cuaca-")
+                Text(text = penentuanCuaca(dataAlat2.curah_hujan.toFloat()))
 
             }
             Icon(
@@ -149,7 +183,7 @@ fun WeatherCard(
         WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${dataAlat1.kelembaban}\n%" )
         WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan angin" , content =  "${dataAlat1.kec_angin}\nm/s" )
         WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${dataAlat2.curah_hujan}\nmm" )
-        WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${dataAlat1.radiasi} \nW/m^2 " )
+        WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${dataAlat1.radiasi} \nW/m\u00B2 " )
     }
     Row {
         Spacer(modifier = Modifier.weight(1f))
@@ -159,6 +193,15 @@ fun WeatherCard(
             Text(text = "${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
         }
     }
+}
+
+
+fun penentuanCuaca(curahHujan: Float):String{
+    return if (curahHujan >= 0.1 && curahHujan <= 5.0)  "Hujan ringan"
+    else if (curahHujan > 5.0 && curahHujan <= 20.0)  "Hujan sedang"
+    else if (curahHujan > 20.0) "Hujan lebat"
+    else "Cerah"
+
 }
 
 @Composable
@@ -191,7 +234,9 @@ fun WeatherItemCard(
             Icon(
                 painterResource(id = iconID),
                 contentDescription = "icon $title",
-                modifier = Modifier.width(30.dp).aspectRatio(1f)
+                modifier = Modifier
+                    .width(30.dp)
+                    .aspectRatio(1f)
             )
             Text(text = content, color = Color.Gray, textAlign = TextAlign.Center)
         }
@@ -200,9 +245,8 @@ fun WeatherItemCard(
 
 
 
-
 @Composable
-fun ForecastCard(list:List<ForecastWeatherData>) {
+fun ForecastCard(list:List<Triple<String,String,String>>) {
 
     LazyRow(
         modifier = Modifier
@@ -211,9 +255,9 @@ fun ForecastCard(list:List<ForecastWeatherData>) {
     ){
         items(list){data ->
             PrediksiHarianCard(
-                date = data.tanggal,
-                cuaca = data.cuaca,
-                iconID = data.getIconId()
+                date = data.second,
+                code = data.first.toInt(),
+                //iconID = data.getIconId()
             )
         }
     }
@@ -222,9 +266,48 @@ fun ForecastCard(list:List<ForecastWeatherData>) {
 }
 
 
+fun getKondisiCuaca(code:Int):String{
+    return when (code) {
+        0 -> "Cerah"
+        1, 2 -> "Cerah Berawan"
+        3 -> "Berawan"
+        4 -> "Berawan Tebal"
+        5 -> "Udara Kabur"
+        10 -> "Asap"
+        45 -> "Kabut"
+        60 -> "Hujan Ringan"
+        61 -> "Hujan Sedang"
+        63 -> "Hujan Lebat"
+        80 -> "Hujan Lokal"
+        95, 97 -> "Hujan Petir"
+        else -> "Kondisi tidak diketahui"
+    }
+}
+
+fun getIDiconCuaca(code:Int):Int{
+    return when (code) {
+        0 -> R.drawable.icon_cuaca_cerah
+        1, 2 -> R.drawable.icon_cuaca_cerah_berawan
+        3 -> R.drawable.icon_cuaca_berawan
+        4 -> R.drawable.icon_cuaca_berawan_tebal
+        5 -> R.drawable.icon_cuaca_udara_kabur
+        10 -> R.drawable.icon_cuaca_asap
+        45 -> R.drawable.icon_cuaca_kabut
+        60 -> R.drawable.icon_cuaca_hujan_ringan
+        61 -> R.drawable.icon_cuaca_hujan_sedang
+        63 -> R.drawable.icon_cuaca_hujan_lebat
+        80 -> R.drawable.icon_cuaca_hujan_ringan
+        95, 97 -> R.drawable.icon_cuaca_hujan_petir
+        else -> 0
+    }
+}
+
+
 @Composable
 fun PrediksiHarianCard(
-    date:String,cuaca:String, iconID:Int
+    date:String,
+    code:Int,
+
 ) {
     Card(
         modifier = Modifier
@@ -232,25 +315,48 @@ fun PrediksiHarianCard(
             .width(IntrinsicSize.Min)
 
     ){
-        Column(modifier =Modifier.padding(12.dp)){
-            Text(text = date)
+        val localeDateFormat = formatDateAndTime(date)
+        Column(modifier =Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally){
+            Text(text = localeDateFormat.first, textAlign = TextAlign.Center)
+            Text(text = localeDateFormat.second)
             Icon(
-                painterResource(id = iconID),
+                painterResource(id = getIDiconCuaca(code)),
                 contentDescription = null,
                 modifier = Modifier
                     .width(90.dp)
                     .aspectRatio(1f))
-            Text(text = cuaca)
+            Text(text = getKondisiCuaca(code))
         }
     }
 }
 
 
+
 @Composable
-fun EarlyWarningCard() {
+fun EarlyWarningCard(
+    kecAngin: Float,
+    curahHujan: Float,
+) {
+    Divider(thickness = 2.dp,modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 16.dp))
+    Text(text = "Early Warning", style = MaterialTheme.typography.labelLarge)
     Card(modifier = Modifier.padding(bottom = 16.dp, top = 8.dp)){
-        Column(modifier =Modifier.padding(12.dp)) {
-            Text(text = "Tidak Ada peringatan untuk saat ini")
+        Row(modifier =Modifier.padding(12.dp)) {
+            if (kecAngin >= 10.2889f && curahHujan >= 20.0f){
+                Icon(imageVector = Icons.Default.Warning,contentDescription = null)
+                Spacer(modifier = Modifier.padding(6.dp))
+                Text(text = "Waspada! Hujan lebat disertai Angin kencang ")
+            }else if(kecAngin >= 10.2889f){
+                Icon(imageVector = Icons.Default.Warning,contentDescription = null)
+                Text(text = "Waspada! Angin Kencang")
+            }else if(curahHujan >= 20.0f){
+                Icon(imageVector = Icons.Default.Warning,contentDescription = null)
+                Text(text = "Waspada! Hujan Lebat")
+            }else{
+                Text(text = "Tidak Ada peringatan untuk saat ini")
+            }
+
         }
     }
 }
@@ -274,8 +380,10 @@ fun BerandaPrev() {
                     id = "19567",
                     tanggal = "16-10-2023",
                     waktu= "12:07:11",
-                    curah_hujan =  "0.00",
-                )
+                    curah_hujan =  "20.00",
+                ),
+                "12:07:11",
+                dataForecast = emptyList(),
             )
         }
     }

@@ -156,6 +156,7 @@ fun GrafikKelembaban(dataAlat: List<Alat1>) {
             val data = weatherData.kelembaban.toFloat()
             Point(id, data)
         }
+
     val maxPlotData = dataAlat.maxOf { it.kelembaban.toFloat() }
 
     val minPlotData = dataAlat.minOf { it.kelembaban.toFloat() }
@@ -287,7 +288,7 @@ fun GrafikRadiasi(dataCuaca100: List<Alat1>) {
                         )
                     ),
                     SelectionHighlightPopUp(popUpLabel = { id, radiasi ->
-                        "$radiasi W/m^2"
+                        "$radiasi W/m/"
                     })
                 )
             )

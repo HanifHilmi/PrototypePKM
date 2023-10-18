@@ -6,15 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.pkm.PrototypePKM.utils.API_TEST
 import com.pkm.PrototypePKM.utils.Alat1
 import com.pkm.PrototypePKM.utils.Alat2
+import com.pkm.PrototypePKM.utils.ApiService
 import com.pkm.PrototypePKM.utils.DATA_REQUEST_INTERVAL
-import com.pkm.PrototypePKM.utils.ResponseData
+import com.pkm.PrototypePKM.utils.ForecastAPIService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
 
 class BerandaViewModel : ViewModel() {
 
@@ -29,7 +29,12 @@ class BerandaViewModel : ViewModel() {
     val multiAlat2 = _multiAlat2Data
 
 
+    private val _dataCuacaList = MutableStateFlow<List<Triple<String,String,String>>>(emptyList())
+    val dataCuacaList = _dataCuacaList
+
+
     private val apiService: ApiService
+    private val forecastAPI: ForecastAPIService
 
     init {
         val retrofit = Retrofit.Builder()
@@ -37,8 +42,16 @@ class BerandaViewModel : ViewModel() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
+
+        val retrofitForcast = Retrofit.Builder()
+            .baseUrl("https://cuaca-gempa-rest-api.vercel.app/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
         apiService = retrofit.create(ApiService::class.java)
+        forecastAPI = retrofitForcast.create(ForecastAPIService::class.java)
         fetchAndUpdateData()
+        fetchForecastData()
     }
 
     private fun fetchAndUpdateData() {
@@ -73,15 +86,44 @@ class BerandaViewModel : ViewModel() {
 
     }
 
+
+    fun fetchForecastData(){
+        viewModelScope.launch {
+            try{
+                val response= forecastAPI.getForecastData()
+                val data = response.getAsJsonObject("data").getAsJsonArray("params")
+
+//                val humidityHourly = data.get(0)
+//                    .asJsonObject
+//                    .getAsJsonArray("times")
+//                    .map {
+//                        val h = it.asJsonObject.getAsJsonPrimitive("h").toString()
+//                        val datetime = it.asJsonObject.getAsJsonPrimitive("datetime").toString()
+//                        val hum = it.asJsonObject.getAsJsonPrimitive("value").toString()
+//                        Triple(h,datetime,hum)
+//                    }
+
+                val weatherHourly = data.get(6)
+                    .asJsonObject
+                    .getAsJsonArray("times")
+                    .map {
+                        val code = it.asJsonObject.getAsJsonPrimitive("code").toString().replace("\"","")
+                        val datetime = it.asJsonObject.getAsJsonPrimitive("datetime").toString().replace("\"","")
+                        val jam = it.asJsonObject.getAsJsonPrimitive("h").toString().replace("\"","")
+                        Triple(code,datetime,jam)
+                    }
+
+                _dataCuacaList.value = weatherHourly
+                Log.d("Forecast test",data.toString())
+                Log.d("Forecast test","Weather $weatherHourly")
+            }catch (e:Exception){
+                Log.e("Forecast test error",e.toString())
+                // Handle any errors or retry logic here
+            }
+        }
+    }
+
 }
 
 
-
-interface ApiService {
-    @GET("getlatestdata.php")
-    suspend fun getLatestData(): ResponseData
-
-    @GET("getdata.php")
-    suspend fun getData():ResponseData
-}
 
