@@ -189,16 +189,19 @@ fun WeatherCard(
     ) {
         WeatherItemCard(iconID = R.drawable.baseline_device_thermostat_24, title = "Suhu" , content =  "${dataAlat1.suhu} \n\u2103" )
         WeatherItemCard(iconID = R.drawable.noun_humidity_3780917, title = "Kelembaban" , content =  "${dataAlat1.kelembaban}\n%" )
-        WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan angin" , content =  "${dataAlat1.kec_angin}\nm/s" )
-        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "curah hujan" , content =  "${dataAlat2.curah_hujan}\nmm" )
+        WeatherItemCard(iconID = R.drawable.wi_strong_wind, title = "Kecepatan Angin" , content =  "${dataAlat1.kec_angin}\nm/s" )
+        WeatherItemCard(iconID = R.drawable.wi_raindrops, title = "Curah Hujan" , content =  "${dataAlat2.curah_hujan}\nmm" )
         WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${dataAlat1.radiasi} \nW/m\u00B2 " )
     }
-    Row {
-        Spacer(modifier = Modifier.weight(1f))
-        Column {
-            Text(text = "Pembaharuan terakhir: ", style = MaterialTheme.typography.labelSmall)
-            Text(text = "${dataAlat1.waktu},${dataAlat1.tanggal} ", style = MaterialTheme.typography.labelSmall)
-            Text(text = "${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
+    Card (modifier = Modifier.fillMaxSize()){
+        Column (modifier = Modifier.padding(8.dp).fillMaxSize()){
+            Row {
+                Text(text = "Update: ", style = MaterialTheme.typography.labelSmall)
+            }
+            Column{
+                Text(text = "${"1. "}${dataAlat1.waktu},${dataAlat1.tanggal} ", style = MaterialTheme.typography.labelSmall)
+                Text(text = "${"2. "}${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
@@ -220,11 +223,12 @@ fun WeatherItemCard(
             .padding(bottom = 16.dp)
             .padding(horizontal = 4.dp)
             .width(100.dp)
+            .height(150.dp)
 
     ) {
         Column(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(10.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
@@ -247,7 +251,6 @@ fun WeatherItemCard(
             Text(text = content, color = Color.Gray, textAlign = TextAlign.Center)
         }
     }
-
 
 
 

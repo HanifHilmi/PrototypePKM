@@ -260,8 +260,6 @@ fun TransparentClipLayout(
                 else if((qrState == "FAILED"))drawRect(QRfailedRed)
                 else if(qrState.isEmpty()) drawRect(QRidleGray)
 
-
-
                 // Source
                 drawRoundRect(
                     topLeft = Offset(

@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -59,18 +61,13 @@ fun SplashScreenContent(onSplashDone: () -> Unit={}) {
 
         Column(
             modifier = Modifier
-                .padding(start = 16.dp, bottom = 16.dp)
-                .align(Alignment.BottomEnd),
+                .align(Alignment.Center),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Bottom
         ) {
-            Text(
-                text = "Di dukung oleh:",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Row{
+            Spacer(modifier = Modifier.height(600.dp))
+            Row(modifier = Modifier.align(Alignment.CenterHorizontally)
+            ){
                 Image(
                     painter = painterResource(R.drawable.logo_bmkg),
                     contentDescription = "BMKG Logo",
@@ -84,7 +81,7 @@ fun SplashScreenContent(onSplashDone: () -> Unit={}) {
                     contentDescription = "STMKG Logo",
                     modifier = Modifier
                         .size(62.dp)
-                        .padding(top = 8.dp)
+                        .padding(top = 6.dp)
                         .offset(x = 8.dp)
                 )
             }
