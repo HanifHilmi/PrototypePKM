@@ -106,13 +106,16 @@ fun FeedbackFinish(){
         }
     }
     if (!showFeedback){
-//        QrCam(
-//            getQrResult = {
-//                qrResult = it
-//            },
-//            qrState = qrState
-//        )
-        FeedbackContent()
+        QrCam(
+            getQrResult = {
+                qrResult = it
+            },
+            qrState = qrState,
+            onBackPressed = {
+                showFeedbackFinish = false
+                sharedFlag = false
+            }
+        )
     }else {
         FeedbackContent()
     }
@@ -120,7 +123,6 @@ fun FeedbackFinish(){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedbackContent() {
-    val navController = rememberNavController()
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
