@@ -55,9 +55,9 @@ class HasilPrediksi(
             1-> fase1
             2-> fase1 + fase2
             3-> fase1 + fase2+ fase3
-            4-> fase1 + fase2+ fase3+fase4
-            5-> fase1 + fase2+ fase3+fase4+fase5
-            6-> fase1 + fase2+ fase3+fase4+fase5+fase6
+            4-> fase1 + fase2+ fase3 + fase4
+            5-> fase1 + fase2+ fase3 + fase4 + fase5
+            6-> fase1 + fase2+ fase3 + fase4 + fase5 + fase6
             else-> 0
         }
 

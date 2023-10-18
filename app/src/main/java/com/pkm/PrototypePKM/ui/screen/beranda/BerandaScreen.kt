@@ -115,21 +115,20 @@ fun BerandaContent(
                 WeatherCard(
                     dataAlat1 = alat1,
                     dataAlat2 = alat2,
-                    currentTime = currentTime
-                ){
-                    onWeatherCardClicked()
-                }
-            }else{
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Text(text = "Loading..")
-                }
-            }
+                    currentTime = currentTime,
+                    onWeatherCardClicked = onWeatherCardClicked
+                )
+            }else
+                Loading()
             Divider(thickness = 2.dp,modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp))
             Text(text = "Prediksi Cuaca", style = MaterialTheme.typography.labelLarge)
-            ForecastCard(dataForecast)
+
+            if(dataForecast.isNotEmpty())
+                ForecastCard(dataForecast)
+            else
+                Loading()
 
             if (alat1 != null && alat2 != null) {
                 EarlyWarningCard(
@@ -141,6 +140,14 @@ fun BerandaContent(
     }
 }
 
+
+@Composable
+fun Loading() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        CircularProgressIndicator()
+        Text(text = "Loading..")
+    }
+}
 
 @Composable
 fun WeatherCard(
@@ -155,16 +162,17 @@ fun WeatherCard(
             .padding(16.dp)
             .fillMaxWidth()
             .height(IntrinsicSize.Max), horizontalArrangement = Arrangement.SpaceBetween) {
+            val kodeCuaca = penenentuanCodeCuaca(dataAlat2.curah_hujan.toFloat())
             Column(modifier = Modifier.weight(1f)) {
 
                 Text(text = currentDateTime().first, style = MaterialTheme.typography.labelLarge)
                 Text(text = currentTime, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.padding(8.dp))
-                Text(text = penentuanCuaca(dataAlat2.curah_hujan.toFloat()))
+                Text(text = getKondisiCuaca(kodeCuaca))
 
             }
             Icon(
-                painter = painterResource(R.drawable.icon_cuaca_cerah),
+                painter = painterResource(getIDiconCuaca(kodeCuaca)),
                 contentDescription = "icon cuaca",
                 modifier= Modifier
                     .fillMaxHeight()
@@ -195,13 +203,11 @@ fun WeatherCard(
     }
 }
 
-
-fun penentuanCuaca(curahHujan: Float):String{
-    return if (curahHujan >= 0.1 && curahHujan <= 5.0)  "Hujan ringan"
-    else if (curahHujan > 5.0 && curahHujan <= 20.0)  "Hujan sedang"
-    else if (curahHujan > 20.0) "Hujan lebat"
-    else "Cerah"
-
+fun penenentuanCodeCuaca(curahHujan: Float):Int{
+    return if (curahHujan in 0.1..5.0)  60
+    else if (curahHujan > 5.0 && curahHujan <= 20.0)  61
+    else if (curahHujan > 20.0) 63
+    else 0
 }
 
 @Composable

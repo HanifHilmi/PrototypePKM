@@ -8,8 +8,9 @@ import com.pkm.PrototypePKM.utils.API_TEST
 import com.pkm.PrototypePKM.utils.ApiService
 import com.pkm.PrototypePKM.utils.HasilPrediksi
 import com.pkm.PrototypePKM.utils.InAgro
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -24,17 +25,16 @@ class PrediksiPanenViewModel:ViewModel() {
 
 
     private val _response = MutableStateFlow<InAgro?>(null)
-    val postInAgro: StateFlow<InAgro?> = _response
 
     private val _hasilPrediksi = MutableStateFlow<HasilPrediksi?>(null)
     val hasilPrediksi = _hasilPrediksi
 
     private val apiService: ApiService
 
-    fun clearHasil(){
-        _hasilPrediksi.value = null
-    }
+    var uiState = MutableStateFlow(PrediksiPanenUIstate())
+        private set
 
+    fun clearHasil(){ _hasilPrediksi.value = null }
 
     fun postData(requestData: InAgro,uuid:String) {
 
@@ -42,22 +42,24 @@ class PrediksiPanenViewModel:ViewModel() {
         Log.d(API_TEST,"json bdoy $json")
         val requestBody = json.toRequestBody("application/json".toMediaType())
         viewModelScope.launch {
+            uiState.update { it.copy(loadingState = true) }
             try {
                 Log.d(API_TEST,"API kirim InAgro")
                 val response = apiService.postInAgro(requestBody)
                 Log.d(API_TEST,"API kirim InAgro hasil ${response.code()} ${response}")
                 fetchPrediksiPanenData(requestData, uuid)
             } catch (e: Exception) {
-                Log.e(API_TEST,"API kirim InAgro $e")
-
                 // Error handling here
+                Log.e(API_TEST,"API kirim InAgro $e")
+                delay(1000)
+                uiState.update { it.copy(loadingState = false, errorMessage = e.message) }
             }
 
 
         }
     }
 
-    fun fetchPrediksiPanenData(dataSent:InAgro,uuid: String){
+    private fun fetchPrediksiPanenData(dataSent:InAgro, uuid: String){
         viewModelScope.launch {
 
             try {
@@ -74,7 +76,7 @@ class PrediksiPanenViewModel:ViewModel() {
                 val count6 = response.getAsJsonPrimitive("count6").asInt
 
 
-                Log.d(API_TEST,"prediksi panen user $userGet total ${countTotal}")
+                Log.d(API_TEST,"API terima model user: $userGet total: ${countTotal}")
                 if (uuid== userGet){
                     _hasilPrediksi.value = HasilPrediksi(
                         countTotal,
@@ -86,10 +88,14 @@ class PrediksiPanenViewModel:ViewModel() {
                         count5,
                         count6
                     )
+                    uiState.update { it.copy(loadingState = false) }
+
                 }else{
                     fetchPrediksiPanenData(dataSent,uuid)
                 }
             }catch (e:Exception){
+                Log.e(API_TEST,"API terima model $e")
+                uiState.update { it.copy(loadingState = false, errorMessage = e.message) }
                 // Handle any errors or retry logic here
             }
 
@@ -106,3 +112,7 @@ class PrediksiPanenViewModel:ViewModel() {
     }
 }
 
+data class PrediksiPanenUIstate(
+    val loadingState:Boolean = false,
+    val errorMessage:String? = null
+)

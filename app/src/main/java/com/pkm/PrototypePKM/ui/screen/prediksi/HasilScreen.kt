@@ -87,7 +87,7 @@ fun RincianPrediksi(hasilPrediksi: HasilPrediksi) {
             Spacer(modifier = Modifier.padding(4.dp))
             if (it.getFaseDesc(i).isNotEmpty()){
                 Text(text = "Fase ke-$i: ${it.getFaseDesc(i)}", fontWeight = FontWeight.Bold)
-                Text(text = "Dalam Waktu: ${it.getTotalHariPerFase(i)} hari setelah tanam")
+                Text(text = "Estimasi Waktu: ${it.getTotalHariPerFase(i)} hari setelah tanam")
                 Text(text = "(${formatDateTimeForPredisi(hasilPrediksi.inAgro.awal_tanam,it.getTotalHariPerFase(i))})")
             }
         }
