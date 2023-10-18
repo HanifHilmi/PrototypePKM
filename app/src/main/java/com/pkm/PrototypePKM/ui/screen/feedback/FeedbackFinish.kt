@@ -65,9 +65,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.viewmodel.compose.viewModel
+import co.yml.charts.common.extensions.isNotNull
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
@@ -87,41 +90,67 @@ import java.util.Locale
 @Composable
 fun FeedbackFinish(){
     val qrKeyList = listOf(
-        "qrkey1","qrkey2","qrkey3"
+        "38472615","91257348","65789213","42816957","13579024"
     )
-    var qrResult by remember { mutableStateOf("")}
-    var qrState by remember { mutableStateOf("")}
-    var showFeedback by remember {mutableStateOf(false)}
+    val context = LocalContext.current
+    var textResult by remember { mutableStateOf("") }
 
-    LaunchedEffect(key1 = qrResult.isNotEmpty()){
 
-        if (qrKeyList.contains(qrResult)){       // QR key valid
-            qrState = "SUCCESS"
-            delay(500)
-            showFeedback = true
-
-        }else if(!qrKeyList.contains(qrResult) && qrResult.isNotEmpty()){//QR key invalid
-            qrState = "FAILED"
-            delay(3000)
-            qrState = ""
-            qrResult = ""
-            showFeedback = false
+    val barcodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        if (result.contents == null) {
+            sharedFlag = false
+            showFeedbackFinish = false
+        } else {
+            textResult = result.contents
         }
     }
-    if (!showFeedback){
-        QrCam(
-            getQrResult = {
-                qrResult = it
-            },
-            qrState = qrState,
-            onBackPressed = {
-                showFeedbackFinish = false
-                sharedFlag = false
-                showFeedback = false
+
+    val requestPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                // Permission granted, do nothing here
+            } else {
+                Toast.makeText(context, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
             }
-        )
-    }else {
-        FeedbackContent()
+        }
+
+    val showCamera = remember { mutableStateOf(false) }
+
+    // Menggunakan LaunchedEffect untuk memulai pemindaian QR code secara otomatis saat showCamera berubah menjadi true
+    LaunchedEffect(showCamera.value) {
+        if (showCamera.value) {
+            val option = ScanOptions()
+            option.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            option.setPrompt("Scan a QR code")
+            option.setCameraId(0)
+            option.setBeepEnabled(false)
+            option.setOrientationLocked(false)
+            barcodeLauncher.launch(option)
+        } else {
+            // Memeriksa izin kamera saat showCamera berubah menjadi true
+            checkCamPermission(
+                activity = (context as Activity),
+                requestPermissionLauncher = requestPermissionLauncher,
+                permission = android.Manifest.permission.CAMERA,
+                showCamera = showCamera
+            )
+        }
+    }
+
+
+    if(showCamera.value){
+        if(textResult.isNotEmpty()){
+            if (textResult.isNotEmpty() ) {
+                FeedbackContent(qrKeyList, viewModel())
+                Toast.makeText(context, "QR Code Valid", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Invalid QR Code", Toast.LENGTH_SHORT).show()
+            }
+        }else{
+            //Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
+        }
+    }else{
+        Toast.makeText(context, "Scanning", Toast.LENGTH_SHORT).show()
     }
 
     BackHandler {
@@ -131,7 +160,7 @@ fun FeedbackFinish(){
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent(viewModel:FeedbackViewModel = viewModel()) {
+fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = viewModel()) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
@@ -191,9 +220,9 @@ fun FeedbackContent(viewModel:FeedbackViewModel = viewModel()) {
 
         val isFeedbackFinished: MutableState<Boolean> = remember { mutableStateOf(false) }
 
-        fun setFeedbackFinished(isFinished: Boolean) {
-            isFeedbackFinished.value = isFinished
-        }
+//        fun setFeedbackFinished(isFinished: Boolean) {
+//            isFeedbackFinished.value = isFinished
+//        }
 
         Column(
             modifier = Modifier
@@ -381,8 +410,6 @@ fun FeedbackContent(viewModel:FeedbackViewModel = viewModel()) {
                                         text.text,
                                         imgURL.value!!,
                                         convertLocalDateToString(selectedDate?: LocalDate.now())
-
-
                                     )
                                 )
 
@@ -403,12 +430,12 @@ fun FeedbackContent(viewModel:FeedbackViewModel = viewModel()) {
             Button(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
-                    if (selectedImageUri != null && text != null && selectedDate != null) {
+                    if (selectedImageUri != null && text.isNotNull() && selectedDate != null) {
 
                         uploadImageToFirebaseStorage(selectedImageUri!!) //FUNGSI KIRIM DATABASE
 
                     } else {
-                        Toast.makeText(context, "Pilih Foto Dahulu", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Pastikan Sudah Mengisi Semua Kriteria", Toast.LENGTH_SHORT).show()
                     }
 
                 }

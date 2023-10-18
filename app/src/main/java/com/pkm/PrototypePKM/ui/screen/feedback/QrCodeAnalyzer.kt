@@ -47,8 +47,10 @@ class QrCodeAnalyzer(
                 }.decode(binaryBmp)
                 onQrCodeScanned(result.text)
             } catch(e: Exception) {
-                // Penanganan kesalahan, Anda dapat menambahkan tindakan yang sesuai di sini.
-                // Contoh: menampilkan pesan kesalahan kepada pengguna.
+                println("An exception occurred: ${e.message}")
+
+                // You can also print the stack trace to get more details about the error
+                e.printStackTrace()
             } finally {
                 image.close()
             }

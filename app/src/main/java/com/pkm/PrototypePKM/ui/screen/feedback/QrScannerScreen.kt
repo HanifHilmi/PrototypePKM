@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -57,10 +56,8 @@ import com.plcoding.qrcodescannercompose.QrCodeAnalyzer
 @Composable
 fun QrCam(
     qrState: String,
-    getQrResult:(String)->Unit,
-    onBackPressed: () -> Unit
+    getQrResult:(String)->Unit
 ) {
-
     var code by remember {mutableStateOf("")}
     val context = LocalContext.current
     val lifeCycleOwner = LocalLifecycleOwner.current
@@ -115,6 +112,10 @@ fun QrCam(
             )
         }
     }
+
+
+
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         if(hasCamPermission){
@@ -174,14 +175,6 @@ fun QrCam(
             )
         }
     }
-
-    BackHandler {
-        if (showCamera.value) {
-            showCamera.value = false
-        } else {
-            onBackPressed()
-        }
-    }
 }
 
 //@Composable
@@ -238,6 +231,7 @@ fun TransparentClipLayout(
                 else -> ""
             }
 
+
             Text(
                 text = pesanScan,
                 style = MaterialTheme.typography.displaySmall,
@@ -260,6 +254,8 @@ fun TransparentClipLayout(
                 else if((qrState == "FAILED"))drawRect(QRfailedRed)
                 else if(qrState.isEmpty()) drawRect(QRidleGray)
 
+
+
                 // Source
                 drawRoundRect(
                     topLeft = Offset(
@@ -280,7 +276,7 @@ fun TransparentClipLayout(
 
 }
 
-private fun checkCamPermission(
+internal fun checkCamPermission(
     activity: Activity,
     requestPermissionLauncher: ActivityResultLauncher<String>,
     permission: String,
