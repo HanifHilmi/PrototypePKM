@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "306225878144",
+    "project_id": "projectpkm-6",
+    "storage_bucket": "projectpkm-6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711733423328:android:859d0a645656f26d983485",
+        "android_client_info": {
+          "package_name": "com.pkm.PrototypePKM"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsW4uF45sbY1WJTlxIAnDD_4zrnOKnNBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

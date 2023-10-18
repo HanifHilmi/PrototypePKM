@@ -9,6 +9,7 @@ import androidx.navigation.navigation
 import com.pkm.PrototypePKM.BottomBarItem
 import com.pkm.PrototypePKM.ui.screen.beranda.BerandaScreen
 import com.pkm.PrototypePKM.ui.screen.beranda.DetailCuacaScreen
+import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackFinish
 import com.pkm.PrototypePKM.ui.screen.feedback.FeedbackScreenNew
 import com.pkm.PrototypePKM.ui.screen.prediksi.PrediksiScreen
 
@@ -33,8 +34,8 @@ fun HomeNavGraph(navController: NavHostController) {
             FeedbackScreenNew()
         }
 
-        berandaCuacaDetailGraph(navController)
 
+        berandaCuacaDetailGraph(navController)
 
     }
 }

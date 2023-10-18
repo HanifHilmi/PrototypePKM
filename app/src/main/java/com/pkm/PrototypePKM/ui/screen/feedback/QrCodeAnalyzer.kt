@@ -20,7 +20,6 @@ class QrCodeAnalyzer(
         ImageFormat.YUV_422_888,
         ImageFormat.YUV_444_888,
     )
-
     override fun analyze(image: ImageProxy) {
         if(image.format in supportedImageFormats) {
             val bytes = image.planes.first().buffer.toByteArray()
@@ -40,14 +39,16 @@ class QrCodeAnalyzer(
                     setHints(
                         mapOf(
                             DecodeHintType.POSSIBLE_FORMATS to arrayListOf(
-                                BarcodeFormat.QR_CODE
+                                BarcodeFormat.QR_CODE,
+                                BarcodeFormat.CODABAR
                             )
                         )
                     )
                 }.decode(binaryBmp)
                 onQrCodeScanned(result.text)
             } catch(e: Exception) {
-                e.printStackTrace()
+                // Penanganan kesalahan, Anda dapat menambahkan tindakan yang sesuai di sini.
+                // Contoh: menampilkan pesan kesalahan kepada pengguna.
             } finally {
                 image.close()
             }
