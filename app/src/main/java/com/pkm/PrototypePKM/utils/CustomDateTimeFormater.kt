@@ -1,6 +1,7 @@
 package com.pkm.PrototypePKM.utils
 
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -38,4 +39,10 @@ fun formatDateTimeForPredisi(input:String,addDay:Int = 0):String{
 
     val modifiedDate = calendar.time
     return  outputFormat.format(modifiedDate)
+}
+
+
+fun convertLocalDateToString(date: LocalDate): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    return date.format(formatter)
 }

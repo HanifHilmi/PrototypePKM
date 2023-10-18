@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.PermissionChecker
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
@@ -72,6 +74,9 @@ import com.maxkeppeler.sheets.calendar.models.CalendarSelection
 import com.maxkeppeler.sheets.calendar.models.CalendarStyle
 import com.pkm.PrototypePKM.R
 import com.pkm.PrototypePKM.ui.theme.PrototypePKMTheme
+import com.pkm.PrototypePKM.utils.InFeedback
+import com.pkm.PrototypePKM.utils.convertLocalDateToString
+import com.pkm.PrototypePKM.viewModels.FeedbackViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -119,7 +124,7 @@ fun FeedbackFinish(){
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent() {
+fun FeedbackContent(viewModel:FeedbackViewModel = viewModel()) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
@@ -131,6 +136,8 @@ fun FeedbackContent() {
         var showOptionsDialog by remember { mutableStateOf(false) }
         val contentResolver = context.contentResolver
         var imgURL = remember { mutableStateOf<String?>(null) }
+
+
 
         val launcher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
@@ -222,7 +229,9 @@ fun FeedbackContent() {
                     .verticalScroll(rememberScrollState()),
                 value = text.text,
                 onValueChange = {
-                    text = text.copy(text = it)
+                    if (it.length <= 500) { // Limit to 500 characters
+                        text = text.copy(text = it)
+                    }
                 },
                 textStyle = TextStyle(color = Color.Black),
                 placeholder = {
@@ -230,13 +239,14 @@ fun FeedbackContent() {
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
+                    imeAction = ImeAction.Next,
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-
+                        calendarState.show()
                     }
-                )
+                ),
+
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -358,6 +368,16 @@ fun FeedbackContent() {
                             .addOnSuccessListener { uri ->
                                 val imageUrl = uri.toString()
                                 imgURL.value = imageUrl
+                                Log.d("FIrebase","Firebase LInk ${imgURL.value?.length} ${imgURL.value}")
+                                viewModel.postData(
+                                    InFeedback(
+                                        text.text,
+                                        imgURL.value!!,
+                                        convertLocalDateToString(selectedDate?: LocalDate.now())
+
+
+                                    )
+                                )
 
                             }
                             .addOnFailureListener { exception ->
@@ -377,7 +397,9 @@ fun FeedbackContent() {
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
                     if (selectedImageUri != null && text != null && selectedDate != null) {
+
                         uploadImageToFirebaseStorage(selectedImageUri!!) //FUNGSI KIRIM DATABASE
+
                     } else {
                         Toast.makeText(context, "Pilih Foto Dahulu", Toast.LENGTH_SHORT).show()
                     }

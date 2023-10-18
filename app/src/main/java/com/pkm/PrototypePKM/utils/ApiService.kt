@@ -20,6 +20,8 @@ interface ApiService {
 
     @POST("inagro.php")
     suspend fun postInAgro(@Body requestBody: RequestBody): Response<Unit>
+    @POST("infeedback.php")
+    suspend fun postInFeedback(@Body requestBody: RequestBody): Response<Unit>
 
 }
 

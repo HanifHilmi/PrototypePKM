@@ -22,10 +22,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class PrediksiPanenViewModel:ViewModel() {
 
-
-
-    private val _response = MutableStateFlow<InAgro?>(null)
-
     private val _hasilPrediksi = MutableStateFlow<HasilPrediksi?>(null)
     val hasilPrediksi = _hasilPrediksi
 
@@ -91,7 +87,8 @@ class PrediksiPanenViewModel:ViewModel() {
                     uiState.update { it.copy(loadingState = false) }
 
                 }else{
-                    fetchPrediksiPanenData(dataSent,uuid)
+                    delay(500)
+                    postData(dataSent,uuid)
                 }
             }catch (e:Exception){
                 Log.e(API_TEST,"API terima model $e")

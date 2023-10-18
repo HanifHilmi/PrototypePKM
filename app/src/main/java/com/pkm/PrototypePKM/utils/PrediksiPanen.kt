@@ -10,6 +10,14 @@ data class InAgro(
 )
 
 
+@Serializable
+data class InFeedback(
+    val hpt:String,
+    val foto:String,
+    val tanggal:String,
+)
+
+
 class HasilPrediksi(
     val totalHari:Int,
     val inAgro: InAgro,
