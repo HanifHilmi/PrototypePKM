@@ -59,7 +59,6 @@ fun PrediksiScreen(prediksiPanenViewModel: PrediksiPanenViewModel = viewModel())
     val uiState by prediksiPanenViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-
     val listTanaman = listOf("Buncis", "Tomat", "Cabai")
 
     var selectedDate by remember {mutableStateOf<LocalDate?>(LocalDate.now())}
