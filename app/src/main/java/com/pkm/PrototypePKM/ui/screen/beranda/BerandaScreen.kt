@@ -2,6 +2,8 @@ package com.pkm.PrototypePKM.ui.screen.beranda
 
 
 import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -22,14 +24,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +61,7 @@ import com.pkm.PrototypePKM.utils.Alat1
 import com.pkm.PrototypePKM.utils.Alat2
 import com.pkm.PrototypePKM.utils.currentDateTime
 import com.pkm.PrototypePKM.utils.formatDateAndTime
+import com.pkm.PrototypePKM.utils.hasPassedDateTime
 import com.pkm.PrototypePKM.viewModels.BerandaViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -60,6 +71,7 @@ import java.util.Locale
 @Composable
 fun BerandaScreen(
     onWeatherCardClicked: () -> Unit,
+    onAboutUsClicked: () -> Unit,
     berandaViewModel: BerandaViewModel= viewModel()
 ) {
 
@@ -84,25 +96,80 @@ fun BerandaScreen(
         }
     }
 
-    BerandaContent(
-        alat1Data,
-        alat2Data,
-        currentTime,
-        onWeatherCardClicked = onWeatherCardClicked,
-        dataForecast,
+    Scaffold(
+        topBar = {
+            TopBar(
+                onAboutUsClicked = onAboutUsClicked
+            )
+        }
+    ){
+        BerandaContent(
+            modifier = Modifier.padding(it),
+            alat1 = alat1Data,
+            alat2 = alat2Data,
+            currentTime = currentTime,
+            onWeatherCardClicked = onWeatherCardClicked,
+            dataForecast = dataForecast,
+        )
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun TopBar(
+    onAboutUsClicked:()-> Unit ={}
+) {
+    TopAppBar(
+        title = {
+            Row(modifier = Modifier
+                .padding(6.dp)
+                .height(IntrinsicSize.Min)) {
+                Text(text = "Selamat datang di CIPTA: Cuaca & Iklim Pertanian",style = MaterialTheme.typography.titleLarge)
+
+            }
+                },
+        modifier = Modifier,
+        navigationIcon = {
+                 IconButton(onClick = { }) {
+                     Image(
+                         painterResource(id = R.drawable.logo_pkm),
+                         contentDescription = "",
+                         contentScale = ContentScale.Fit,
+                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                     )
+                 }
+
+
+        },
+        colors = TopAppBarDefaults.mediumTopAppBarColors(),
+        actions = {
+            IconButton(
+                onClick = {
+                    onAboutUsClicked()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Info"
+                )
+            }
+        },
+        scrollBehavior = null
     )
 
 }
 
 @Composable
 fun BerandaContent(
+    modifier:Modifier = Modifier,
     alat1: Alat1?,
     alat2: Alat2?,
     currentTime:String,
     onWeatherCardClicked: () -> Unit = {},
     dataForecast: List<Triple<String, String, String>>
-) {
-    Box(modifier = Modifier.fillMaxSize()){
+) = Box(modifier = modifier.fillMaxSize()){
         Column(modifier = Modifier
             .padding(16.dp)
             .verticalScroll(rememberScrollState())) {
@@ -138,7 +205,6 @@ fun BerandaContent(
             }
         }
     }
-}
 
 
 @Composable
@@ -194,14 +260,13 @@ fun WeatherCard(
         WeatherItemCard(iconID = R.drawable.wi_hot, title = "Radiasi Matahari" , content =  "${dataAlat1.radiasi} \nW/m\u00B2 " )
     }
     Card (modifier = Modifier.fillMaxSize()){
-        Column (modifier = Modifier.padding(8.dp).fillMaxSize()){
-            Row {
-                Text(text = "Update: ", style = MaterialTheme.typography.labelSmall)
-            }
-            Column{
-                Text(text = "${"1. "}${dataAlat1.waktu},${dataAlat1.tanggal} ", style = MaterialTheme.typography.labelSmall)
-                Text(text = "${"2. "}${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
-            }
+        Column (modifier = Modifier
+            .padding(8.dp)
+            .fillMaxSize()){
+            Text(text = "Update terakhir: ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${"Alat 1. "}${dataAlat1.waktu},${dataAlat1.tanggal} ", style = MaterialTheme.typography.labelSmall)
+            Text(text = "${"Alat 2. "}${dataAlat2.waktu},${dataAlat2.tanggal} ", style = MaterialTheme.typography.labelSmall)
+
         }
     }
 }
@@ -270,6 +335,14 @@ fun ForecastCard(list:List<Triple<String,String,String>>) {
             )
         }
     }
+    Row(modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth()) {
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(imageVector = Icons.Filled.LocationOn, contentDescription = "",modifier = Modifier.fillMaxHeight())
+        Column {
+            Text(text = "Lokasi, Kab. Bandung",style = MaterialTheme.typography.labelSmall)
+            Text(text = "Sumber data: data.bmkg.go.id",style = MaterialTheme.typography.labelSmall)
+        }
+    }
 
 
 }
@@ -318,23 +391,29 @@ fun PrediksiHarianCard(
     code:Int,
 
 ) {
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 4.dp)
-            .width(IntrinsicSize.Min)
+    val hasTimePassed = hasPassedDateTime(date)
+    val localeDateFormat = formatDateAndTime(date)
 
-    ){
-        val localeDateFormat = formatDateAndTime(date)
-        Column(modifier =Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally){
-            Text(text = localeDateFormat.first, textAlign = TextAlign.Center)
-            Text(text = localeDateFormat.second)
-            Icon(
-                painterResource(id = getIDiconCuaca(code)),
-                contentDescription = null,
-                modifier = Modifier
-                    .width(90.dp)
-                    .aspectRatio(1f))
-            Text(text = getKondisiCuaca(code))
+    if (!hasTimePassed){
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 4.dp)
+                .width(IntrinsicSize.Min)
+
+        ){
+
+
+            Column(modifier =Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally){
+                Text(text = localeDateFormat.first, textAlign = TextAlign.Center)
+                Text(text = localeDateFormat.second)
+                Icon(
+                    painterResource(id = getIDiconCuaca(code)),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(90.dp)
+                        .aspectRatio(1f))
+                Text(text = getKondisiCuaca(code))
+            }
         }
     }
 }
@@ -376,7 +455,7 @@ fun BerandaPrev() {
     MaterialTheme{
         Surface {
             BerandaContent(
-                Alat1(
+                alat1= Alat1(
                     id = "19567",
                     tanggal = "16-10-2023",
                     waktu= "12:07:11",
@@ -391,7 +470,7 @@ fun BerandaPrev() {
                     waktu= "12:07:11",
                     curah_hujan =  "20.00",
                 ),
-                "12:07:11",
+                currentTime= "12:07:11",
                 dataForecast = emptyList(),
             )
         }

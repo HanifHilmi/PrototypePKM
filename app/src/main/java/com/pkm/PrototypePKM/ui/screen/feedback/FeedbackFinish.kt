@@ -140,16 +140,14 @@ fun FeedbackFinish(){
 
     if(showCamera.value){
         if(textResult.isNotEmpty()){
-            if (textResult in qrKeyList) {
-                FeedbackContent(textResult, viewModel())
+            if (textResult.isNotEmpty() ) {
+                FeedbackContent(qrKeyList, viewModel())
                 Toast.makeText(context, "QR Code Valid", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(context, "Invalid QR Code", Toast.LENGTH_SHORT).show()
-                sharedFlag = false
-                showFeedbackFinish = false
             }
         }else{
-            Toast.makeText(context, "QR tidak Terdeteksi", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
         }
     }else{
         Toast.makeText(context, "Scanning", Toast.LENGTH_SHORT).show()
@@ -162,7 +160,7 @@ fun FeedbackFinish(){
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent(textResult: String, viewModel: FeedbackViewModel = viewModel()) {
+fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = viewModel()) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
@@ -243,7 +241,7 @@ fun FeedbackContent(textResult: String, viewModel: FeedbackViewModel = viewModel
                     modifier = Modifier.size(24.dp) // Sesuaikan ukuran ikon
                 )
                 Text(
-                    text = textResult, // Teks yang ingin Anda tambahkan
+                    text = "Anon", // Teks yang ingin Anda tambahkan
                     modifier = Modifier.padding(start = 8.dp), // Sesuaikan jarak antara ikon dan teks
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -375,7 +373,7 @@ fun FeedbackContent(textResult: String, viewModel: FeedbackViewModel = viewModel
                         Icon(
                             painter = painterResource(id = R.drawable.ic_cam),
                             contentDescription = null,
-                            tint = Color.Black
+                            tint = Color.White
                         )
                     }
                 }
@@ -437,7 +435,7 @@ fun FeedbackContent(textResult: String, viewModel: FeedbackViewModel = viewModel
                         uploadImageToFirebaseStorage(selectedImageUri!!) //FUNGSI KIRIM DATABASE
 
                     } else {
-                        Toast.makeText(context, "Pastikan Sudah Mengisi Semua Kolom", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Pastikan Sudah Mengisi Semua Kriteria", Toast.LENGTH_SHORT).show()
                     }
 
                 }
