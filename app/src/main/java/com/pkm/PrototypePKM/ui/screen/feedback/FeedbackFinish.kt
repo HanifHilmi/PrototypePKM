@@ -43,6 +43,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -58,10 +59,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -105,16 +106,18 @@ fun FeedbackFinish(){
         }
     }
 
+    val showCamera = remember { mutableStateOf(false) }
     val requestPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 // Permission granted, do nothing here
+                showCamera.value = true
             } else {
                 Toast.makeText(context, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
 
-    val showCamera = remember { mutableStateOf(false) }
+
 
     // Menggunakan LaunchedEffect untuk memulai pemindaian QR code secara otomatis saat showCamera berubah menjadi true
     LaunchedEffect(showCamera.value) {
@@ -126,6 +129,7 @@ fun FeedbackFinish(){
             option.setBeepEnabled(false)
             option.setOrientationLocked(false)
             barcodeLauncher.launch(option)
+            delay(500)
         } else {
             // Memeriksa izin kamera saat showCamera berubah menjadi true
             checkCamPermission(
@@ -140,17 +144,19 @@ fun FeedbackFinish(){
 
     if(showCamera.value){
         if(textResult.isNotEmpty()){
-            if (textResult.isNotEmpty() ) {
-                FeedbackContent(qrKeyList, viewModel())
+            if (qrKeyList.contains(textResult) ) {
+                FeedbackContent(viewModel())
                 Toast.makeText(context, "QR Code Valid", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(context, "Invalid QR Code", Toast.LENGTH_SHORT).show()
+                showCamera.value = false
+                textResult = ""
             }
         }else{
             //Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
         }
     }else{
-        Toast.makeText(context, "Scanning", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(context, "Scanning", Toast.LENGTH_SHORT).show()
     }
 
     BackHandler {
@@ -160,7 +166,7 @@ fun FeedbackFinish(){
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = viewModel()) {
+fun FeedbackContent( viewModel: FeedbackViewModel = viewModel()) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
@@ -255,7 +261,6 @@ fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = view
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
             TextField(
                 modifier = Modifier
                     .height(400.dp)
@@ -269,8 +274,8 @@ fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = view
                         text = text.copy(text = it)
                     }
                 },
-                textStyle = TextStyle(color = Color.Black),
-                placeholder = {
+                textStyle = MaterialTheme.typography.bodyLarge,
+                label = {
                     Text("Input Feedback")
                 },
                 keyboardOptions = KeyboardOptions(
@@ -426,7 +431,7 @@ fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = view
                 }
             }
 
-            Spacer(modifier = Modifier.height(56.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 modifier = Modifier.align(Alignment.End),
                 onClick = {
@@ -512,6 +517,16 @@ fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = view
                     }
                 )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun PrevContent() {
+    PrototypePKMTheme {
+        Surface {
+            FeedbackContent()
         }
     }
 }

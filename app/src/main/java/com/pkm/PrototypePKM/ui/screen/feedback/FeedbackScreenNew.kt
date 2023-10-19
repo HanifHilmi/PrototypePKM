@@ -18,7 +18,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -43,7 +42,7 @@ fun FeedbackScreenNew() {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(70.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = "Feedback",
                 fontSize = 32.sp, // Menggunakan 'sp' untuk ukuran huruf
@@ -53,7 +52,7 @@ fun FeedbackScreenNew() {
                     .wrapContentSize(align = Alignment.Center)
             )
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Card(
                 modifier = Modifier
                     .width(200.dp)
