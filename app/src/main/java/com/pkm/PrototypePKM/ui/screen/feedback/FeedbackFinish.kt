@@ -141,7 +141,7 @@ fun FeedbackFinish(){
     if(showCamera.value){
         if(textResult.isNotEmpty()){
             if (textResult.isNotEmpty() ) {
-                FeedbackContent(qrKeyList, viewModel())
+                FeedbackContent(textResult, viewModel())
                 Toast.makeText(context, "QR Code Valid", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(context, "Invalid QR Code", Toast.LENGTH_SHORT).show()
@@ -160,7 +160,7 @@ fun FeedbackFinish(){
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = viewModel()) {
+fun FeedbackContent(textResult: String, viewModel: FeedbackViewModel = viewModel()) {
     PrototypePKMTheme {
         val context = LocalContext.current
         var text by remember { mutableStateOf(TextFieldValue()) }
@@ -241,7 +241,7 @@ fun FeedbackContent(qrKeyList: List<String>, viewModel: FeedbackViewModel = view
                     modifier = Modifier.size(24.dp) // Sesuaikan ukuran ikon
                 )
                 Text(
-                    text = "Anon", // Teks yang ingin Anda tambahkan
+                    text = textResult, // Teks yang ingin Anda tambahkan
                     modifier = Modifier.padding(start = 8.dp), // Sesuaikan jarak antara ikon dan teks
                     style = MaterialTheme.typography.labelLarge
                 )
